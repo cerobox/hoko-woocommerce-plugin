@@ -42,3 +42,27 @@ function hoko_360_deactivate() {
 	// Código de desactivación aquí
 }
 register_deactivation_hook( __FILE__, 'hoko_360_deactivate' );
+
+/**
+ * Cargar la clase principal del admin.
+ */
+require_once plugin_dir_path( __FILE__ ) . 'admin/class-hoko-admin.php';
+
+/**
+ * Inicializar el plugin.
+ */
+function hoko_360_run() {
+	$plugin_name = 'hoko-360';
+	$version     = '1.0.0';
+	
+	$plugin_admin = new Hoko_Admin( $plugin_name, $version );
+	
+	// Hooks para el área de administración
+	add_action( 'admin_enqueue_scripts', array( $plugin_admin, 'enqueue_styles' ) );
+	add_action( 'admin_enqueue_scripts', array( $plugin_admin, 'enqueue_scripts' ) );
+	add_action( 'admin_menu', array( $plugin_admin, 'add_admin_menu' ) );
+	
+	// Hook para manejar la petición AJAX de autentificación
+	add_action( 'wp_ajax_hoko_authenticate', array( $plugin_admin, 'handle_auth_request' ) );
+}
+add_action( 'plugins_loaded', 'hoko_360_run' );

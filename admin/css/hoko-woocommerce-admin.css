@@ -1,0 +1,50 @@
+/**
+ * Estilos para el área de administración de Hoko 360
+ */
+
+.hoko-auth-container {
+	max-width: 800px;
+	margin: 20px 0;
+}
+
+.hoko-auth-card {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+	padding: 20px;
+	margin-top: 20px;
+}
+
+.hoko-auth-card h2 {
+	margin-top: 0;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #e5e5e5;
+}
+
+.hoko-auth-card p {
+	color: #646970;
+	margin-bottom: 20px;
+}
+
+.hoko-auth-card .required {
+	color: #d63638;
+}
+
+.hoko-auth-card .spinner {
+	float: none;
+	margin: 0 10px;
+	visibility: hidden;
+}
+
+.hoko-auth-card .spinner.is-active {
+	visibility: visible;
+}
+
+#hoko-auth-message {
+	margin-top: 20px;
+}
+
+#hoko-auth-message.notice {
+	padding: 12px;
+	margin: 20px 0 0 0;
+}
