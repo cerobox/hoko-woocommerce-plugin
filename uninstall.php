@@ -2,7 +2,7 @@
 /**
  * Disparado durante la desinstalación del plugin.
  *
- * @package HokoWooCommerce
+ * @package Hoko360
  */
 
 // Si uninstall no es llamado desde WordPress, entonces salir.

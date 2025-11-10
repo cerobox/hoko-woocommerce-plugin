@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name:       Hoko WooCommerce
+ * Plugin Name:       Hoko 360
  * Plugin URI:        https://github.com/cerobox/hoko-woocommerce-plugin
- * Description:       Plugin de integración de WooCommerce con funcionalidades personalizadas. / WooCommerce integration plugin with custom functionalities.
+ * Description:       Plugin de integración con WooCommerce para Hoko 360. / WooCommerce integration plugin for Hoko 360.
  * Version:           1.0.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
@@ -10,11 +10,11 @@
  * Author URI:        https://github.com/cerobox
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       hoko-woocommerce
+ * Text Domain:       hoko-360
  * Domain Path:       /languages
  * Requires Plugins:  woocommerce
  *
- * @package HokoWooCommerce
+ * @package Hoko360
  */
 
 // Si este archivo es llamado directamente, abortar.
@@ -25,20 +25,20 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Código que se ejecuta durante la activación del plugin.
  */
-function hoko_woocommerce_activate() {
+function hoko_360_activate() {
 	// Verificar si WooCommerce está activo
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		wp_die( 
-			esc_html__( 'Este plugin requiere WooCommerce. Por favor instala y activa WooCommerce primero.', 'hoko-woocommerce' ) 
+			esc_html__( 'Este plugin requiere WooCommerce. Por favor instala y activa WooCommerce primero.', 'hoko-360' ) 
 		);
 	}
 }
-register_activation_hook( __FILE__, 'hoko_woocommerce_activate' );
+register_activation_hook( __FILE__, 'hoko_360_activate' );
 
 /**
  * Código que se ejecuta durante la desactivación del plugin.
  */
-function hoko_woocommerce_deactivate() {
+function hoko_360_deactivate() {
 	// Código de desactivación aquí
 }
-register_deactivation_hook( __FILE__, 'hoko_woocommerce_deactivate' );
+register_deactivation_hook( __FILE__, 'hoko_360_deactivate' );

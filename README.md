@@ -1,15 +1,15 @@
-# Hoko WooCommerce Plugin
+# Hoko 360 Plugin
 
-Plugin de integración de WooCommerce con funcionalidades personalizadas.  
-WooCommerce integration plugin with custom functionalities.
+Plugin de integración con WooCommerce para Hoko 360.
+WooCommerce integration plugin for Hoko 360.
 
 ## Descripción / Description
 
 **Español:**  
-Plugin de WordPress que extiende las funcionalidades de WooCommerce para proporcionar características personalizadas.
+Plugin de WordPress que extiende las funcionalidades de WooCommerce para proporcionar características personalizadas para Hoko 360.
 
 **English:**  
-WordPress plugin that extends WooCommerce functionalities to provide custom features.
+WordPress plugin that extends WooCommerce functionalities to provide custom features for Hoko 360.
 
 ## Requisitos / Requirements
 
