@@ -168,6 +168,42 @@ class Hoko_Admin {
 	}
 
 	/**
+	 * Obtiene el endpoint de API según el país.
+	 *
+	 * @param string $country Código del país.
+	 * @return string URL del endpoint.
+	 */
+	private function get_api_endpoint( $country ) {
+		$endpoints = array(
+			'colombia' => 'https://v4.hoko.com.co/api/login',
+			'ecuador'  => 'https://hoko.com.ec/api/login',
+			'usa'      => 'https://hoko360.com/api/login',
+		);
+
+		return isset( $endpoints[ $country ] ) ? $endpoints[ $country ] : $endpoints['colombia'];
+	}
+
+	/**
+	 * Obtiene la URL base de la API según el país (sin /api/login).
+	 *
+	 * @param string $country Código del país.
+	 * @return string URL base de la API.
+	 */
+	public function get_api_base_url( $country = '' ) {
+		if ( empty( $country ) ) {
+			$country = get_option( 'hoko_360_auth_country', 'colombia' );
+		}
+
+		$base_urls = array(
+			'colombia' => 'https://v4.hoko.com.co/api',
+			'ecuador'  => 'https://hoko.com.ec/api',
+			'usa'      => 'https://hoko360.com/api',
+		);
+
+		return isset( $base_urls[ $country ] ) ? $base_urls[ $country ] : $base_urls['colombia'];
+	}
+
+	/**
 	 * Maneja la petición AJAX de autentificación.
 	 */
 	public function handle_auth_request() {
@@ -182,9 +218,10 @@ class Hoko_Admin {
 		// Obtener datos del formulario
 		$email    = isset( $_POST['email'] ) ? sanitize_email( $_POST['email'] ) : '';
 		$password = isset( $_POST['password'] ) ? $_POST['password'] : '';
+		$country  = isset( $_POST['country'] ) ? sanitize_text_field( $_POST['country'] ) : 'colombia';
 
 		// Validar datos
-		if ( empty( $email ) || empty( $password ) ) {
+		if ( empty( $email ) || empty( $password ) || empty( $country ) ) {
 			wp_send_json_error( array( 'message' => __( 'Por favor completa todos los campos.', 'hoko-360' ) ) );
 		}
 
@@ -192,9 +229,18 @@ class Hoko_Admin {
 			wp_send_json_error( array( 'message' => __( 'Por favor ingresa un email válido.', 'hoko-360' ) ) );
 		}
 
+		// Validar país
+		$valid_countries = array( 'colombia', 'ecuador', 'usa' );
+		if ( ! in_array( $country, $valid_countries, true ) ) {
+			wp_send_json_error( array( 'message' => __( 'País no válido.', 'hoko-360' ) ) );
+		}
+
+		// Obtener endpoint según el país
+		$api_endpoint = $this->get_api_endpoint( $country );
+
 		// Realizar petición a la API de Hoko
 		$response = wp_remote_post(
-			'https://v4.hoko.com.co/api/login',
+			$api_endpoint,
 			array(
 				'method'  => 'POST',
 				'timeout' => 45,
@@ -231,6 +277,9 @@ class Hoko_Admin {
 				// Guardar el token
 				update_option( 'hoko_360_auth_token', sanitize_text_field( $data['token'] ) );
 				
+				// Guardar el país conectado
+				update_option( 'hoko_360_auth_country', $country );
+				
 				// Guardar también el email del usuario autenticado
 				update_option( 'hoko_360_auth_email', $email );
 				
@@ -265,6 +314,7 @@ class Hoko_Admin {
 
 		// Eliminar token y datos de autentificación
 		delete_option( 'hoko_360_auth_token' );
+		delete_option( 'hoko_360_auth_country' );
 		delete_option( 'hoko_360_auth_email' );
 		delete_option( 'hoko_360_auth_time' );
 

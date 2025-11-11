@@ -16,11 +16,12 @@
 			var $message = $('#hoko-auth-message');
 			
 			// Obtener datos del formulario
+			var country = $('#hoko_country').val();
 			var email = $('#hoko_email').val();
 			var password = $('#hoko_password').val();
 			
 			// Validación básica
-			if (!email || !password) {
+			if (!country || !email || !password) {
 				showMessage('error', 'Por favor completa todos los campos.');
 				return;
 			}
@@ -38,6 +39,7 @@
 				data: {
 					action: 'hoko_authenticate',
 					nonce: hokoAdmin.nonce,
+					country: country,
 					email: email,
 					password: password
 				},
