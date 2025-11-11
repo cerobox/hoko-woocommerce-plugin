@@ -48,3 +48,32 @@
 	padding: 12px;
 	margin: 20px 0 0 0;
 }
+
+/* Estilos para la página de órdenes */
+.hoko-orders-container {
+	max-width: 1200px;
+	margin: 20px 0;
+}
+
+.hoko-orders-card {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+	padding: 20px;
+	margin-top: 20px;
+}
+
+.hoko-orders-card h2 {
+	margin-top: 0;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #e5e5e5;
+}
+
+.hoko-orders-card p {
+	color: #646970;
+	margin-bottom: 20px;
+}
+
+.hoko-orders-card .notice.inline {
+	margin: 20px 0;
+}

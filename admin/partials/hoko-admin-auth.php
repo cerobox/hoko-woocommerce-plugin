@@ -18,9 +18,42 @@ if ( ! defined( 'WPINC' ) ) {
 	<div class="hoko-auth-container">
 		<div class="hoko-auth-card">
 			<h2><?php esc_html_e( 'Autentificación', 'hoko-360' ); ?></h2>
-			<p><?php esc_html_e( 'Ingresa tus credenciales para conectar con Hoko 360.', 'hoko-360' ); ?></p>
 			
-			<form id="hoko-auth-form" method="post">
+			<?php if ( $is_authenticated ) : ?>
+				<!-- Usuario autenticado -->
+				<div class="notice notice-success inline">
+					<p>
+						<strong><?php esc_html_e( '✓ Sesión activa', 'hoko-360' ); ?></strong><br>
+						<?php
+						$auth_email = get_option( 'hoko_360_auth_email', '' );
+						$auth_time  = get_option( 'hoko_360_auth_time', '' );
+						if ( $auth_email ) {
+							/* translators: %s: email del usuario autenticado */
+							printf( esc_html__( 'Usuario: %s', 'hoko-360' ), esc_html( $auth_email ) );
+							echo '<br>';
+						}
+						if ( $auth_time ) {
+							/* translators: %s: fecha de autenticación */
+							printf( esc_html__( 'Autenticado el: %s', 'hoko-360' ), esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $auth_time ) ) );
+						}
+						?>
+					</p>
+				</div>
+				
+				<p><?php esc_html_e( 'Ya tienes una sesión activa con Hoko 360.', 'hoko-360' ); ?></p>
+				
+				<p class="submit">
+					<button type="button" class="button button-secondary" id="hoko-logout-button">
+						<?php esc_html_e( 'Cerrar sesión', 'hoko-360' ); ?>
+					</button>
+					<span class="spinner"></span>
+				</p>
+				
+			<?php else : ?>
+				<!-- Formulario de login -->
+				<p><?php esc_html_e( 'Ingresa tus credenciales para conectar con Hoko 360.', 'hoko-360' ); ?></p>
+				
+				<form id="hoko-auth-form" method="post">
 				<table class="form-table" role="presentation">
 					<tbody>
 						<tr>
@@ -62,13 +95,14 @@ if ( ! defined( 'WPINC' ) ) {
 					</tbody>
 				</table>
 
-				<p class="submit">
-					<button type="submit" class="button button-primary" id="hoko-auth-submit">
-						<?php esc_html_e( 'Autentificar', 'hoko-360' ); ?>
-					</button>
-					<span class="spinner"></span>
-				</p>
-			</form>
+					<p class="submit">
+						<button type="submit" class="button button-primary" id="hoko-auth-submit">
+							<?php esc_html_e( 'Autentificar', 'hoko-360' ); ?>
+						</button>
+						<span class="spinner"></span>
+					</p>
+				</form>
+			<?php endif; ?>
 
 			<div id="hoko-auth-message" class="hoko-message" style="display: none;"></div>
 		</div>

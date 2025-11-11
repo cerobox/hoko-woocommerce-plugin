@@ -62,7 +62,8 @@ function hoko_360_run() {
 	add_action( 'admin_enqueue_scripts', array( $plugin_admin, 'enqueue_scripts' ) );
 	add_action( 'admin_menu', array( $plugin_admin, 'add_admin_menu' ) );
 	
-	// Hook para manejar la petición AJAX de autentificación
+	// Hooks para manejar peticiones AJAX
 	add_action( 'wp_ajax_hoko_authenticate', array( $plugin_admin, 'handle_auth_request' ) );
+	add_action( 'wp_ajax_hoko_logout', array( $plugin_admin, 'handle_logout_request' ) );
 }
 add_action( 'plugins_loaded', 'hoko_360_run' );

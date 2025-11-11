@@ -73,22 +73,98 @@ class Hoko_Admin {
 	 * Registra el menú de administración.
 	 */
 	public function add_admin_menu() {
+		// Obtener el icono personalizado
+		$icon_url = $this->get_menu_icon();
+
+		// Menú principal
 		add_menu_page(
 			__( 'Hoko 360', 'hoko-360' ),           // Título de la página
 			__( 'Hoko 360', 'hoko-360' ),           // Título del menú
 			'manage_options',                        // Capacidad requerida
 			'hoko-360',                              // Slug del menú
 			array( $this, 'display_auth_page' ),    // Función callback
-			'dashicons-admin-generic',               // Icono
+			$icon_url,                               // Icono personalizado
 			56                                       // Posición
 		);
+
+		// Submenú: Iniciar sesión
+		add_submenu_page(
+			'hoko-360',                              // Slug del menú padre
+			__( 'Iniciar sesión', 'hoko-360' ),     // Título de la página
+			__( 'Iniciar sesión', 'hoko-360' ),     // Título del submenú
+			'manage_options',                        // Capacidad requerida
+			'hoko-360',                              // Slug (mismo que el padre para que sea la primera opción)
+			array( $this, 'display_auth_page' )     // Función callback
+		);
+
+		// Submenú: Órdenes de compra
+		add_submenu_page(
+			'hoko-360',                              // Slug del menú padre
+			__( 'Órdenes de compra', 'hoko-360' ),  // Título de la página
+			__( 'Órdenes de compra', 'hoko-360' ),  // Título del submenú
+			'manage_options',                        // Capacidad requerida
+			'hoko-360-orders',                       // Slug del submenú
+			array( $this, 'display_orders_page' )   // Función callback
+		);
+	}
+
+	/**
+	 * Obtiene el icono del menú (SVG codificado en base64).
+	 *
+	 * @return string URL del icono o dashicon.
+	 */
+	private function get_menu_icon() {
+		$icon_path = plugin_dir_path( __FILE__ ) . 'images/hoko-icon.svg';
+		
+		if ( file_exists( $icon_path ) ) {
+			$icon_svg = file_get_contents( $icon_path );
+			// Codificar SVG en base64 para usarlo como data URI
+			return 'data:image/svg+xml;base64,' . base64_encode( $icon_svg );
+		}
+		
+		// Fallback a dashicon si no existe el archivo
+		return 'dashicons-admin-generic';
 	}
 
 	/**
 	 * Muestra la página de autentificación.
 	 */
 	public function display_auth_page() {
+		// Obtener token guardado
+		$token = get_option( 'hoko_360_auth_token', '' );
+		$is_authenticated = ! empty( $token );
+		
 		require_once plugin_dir_path( __FILE__ ) . 'partials/hoko-admin-auth.php';
+	}
+
+	/**
+	 * Muestra la página de órdenes de compra.
+	 */
+	public function display_orders_page() {
+		// Verificar si está autenticado
+		$token = get_option( 'hoko_360_auth_token', '' );
+		$is_authenticated = ! empty( $token );
+		
+		require_once plugin_dir_path( __FILE__ ) . 'partials/hoko-admin-orders.php';
+	}
+
+	/**
+	 * Obtiene el token de autentificación guardado.
+	 *
+	 * @return string Token de autentificación o cadena vacía si no existe.
+	 */
+	public function get_auth_token() {
+		return get_option( 'hoko_360_auth_token', '' );
+	}
+
+	/**
+	 * Verifica si el usuario está autenticado.
+	 *
+	 * @return bool True si está autenticado, false en caso contrario.
+	 */
+	public function is_authenticated() {
+		$token = $this->get_auth_token();
+		return ! empty( $token );
 	}
 
 	/**
@@ -150,9 +226,16 @@ class Hoko_Admin {
 
 		// Verificar respuesta exitosa
 		if ( $response_code === 200 ) {
-			// Guardar token u otros datos si es necesario
+			// Guardar token - la API devuelve el token dentro de data.token
 			if ( isset( $data['token'] ) ) {
-				update_option( 'hoko_360_auth_token', $data['token'] );
+				// Guardar el token
+				update_option( 'hoko_360_auth_token', sanitize_text_field( $data['token'] ) );
+				
+				// Guardar también el email del usuario autenticado
+				update_option( 'hoko_360_auth_email', $email );
+				
+				// Guardar timestamp de autentificación
+				update_option( 'hoko_360_auth_time', current_time( 'timestamp' ) );
 			}
 
 			wp_send_json_success(
@@ -166,5 +249,29 @@ class Hoko_Admin {
 			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error en la autentificación.', 'hoko-360' );
 			wp_send_json_error( array( 'message' => $error_message ) );
 		}
+	}
+
+	/**
+	 * Maneja la petición AJAX para cerrar sesión.
+	 */
+	public function handle_logout_request() {
+		// Verificar nonce
+		check_ajax_referer( 'hoko_auth_nonce', 'nonce' );
+
+		// Verificar permisos
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'No tienes permisos para realizar esta acción.', 'hoko-360' ) ) );
+		}
+
+		// Eliminar token y datos de autentificación
+		delete_option( 'hoko_360_auth_token' );
+		delete_option( 'hoko_360_auth_email' );
+		delete_option( 'hoko_360_auth_time' );
+
+		wp_send_json_success(
+			array(
+				'message' => __( 'Sesión cerrada exitosamente.', 'hoko-360' ),
+			)
+		);
 	}
 }
