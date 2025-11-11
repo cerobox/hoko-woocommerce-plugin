@@ -9,6 +9,40 @@
 class Hoko_Admin {
 
 	/**
+	 * Configuración de endpoints de API por país.
+	 *
+	 * @var array
+	 */
+	private $api_endpoints = array(
+		'colombia' => array(
+			'login' => 'https://v4.hoko.com.co/api/login',
+			'base'  => 'https://v4.hoko.com.co/api'
+		),
+		'ecuador' => array(
+			'login' => 'https://hoko.com.ec/api/login',
+			'base'  => 'https://hoko.com.ec/api'
+		),
+		'usa' => array(
+			'login' => 'https://hoko360.com/api/login',
+			'base'  => 'https://hoko360.com/api'
+		)
+	);
+
+	/**
+	 * Cache para token de autentificación.
+	 *
+	 * @var string|null
+	 */
+	private $cached_token = null;
+
+	/**
+	 * Cache para datos de autentificación.
+	 *
+	 * @var array|null
+	 */
+	private $cached_auth_data = null;
+
+	/**
 	 * El ID de este plugin.
 	 *
 	 * @var string $plugin_name El ID de este plugin.
@@ -76,6 +110,7 @@ class Hoko_Admin {
 				'ajaxurl'   => admin_url( 'admin-ajax.php' ),
 				'nonce'     => wp_create_nonce( 'hoko_auth_nonce' ),
 				'ordersUrl' => admin_url( 'admin.php?page=hoko-360-orders' ),
+				'authUrl'   => admin_url( 'admin.php?page=hoko-360-auth' ),
 			)
 		);
 	}
@@ -87,35 +122,54 @@ class Hoko_Admin {
 		// Obtener el icono personalizado
 		$icon_url = $this->get_menu_icon();
 
-		// Menú principal
+		// Menú principal (apunta a Órdenes de compra)
 		add_menu_page(
 			__( 'Hoko 360', 'hoko-360' ),           // Título de la página
 			__( 'Hoko 360', 'hoko-360' ),           // Título del menú
 			'manage_options',                        // Capacidad requerida
-			'hoko-360',                              // Slug del menú
-			array( $this, 'display_auth_page' ),    // Función callback
+			'hoko-360-orders',                       // Slug del menú (apunta a órdenes)
+			array( $this, 'display_orders_page' ),  // Función callback
 			$icon_url,                               // Icono personalizado
 			56                                       // Posición
 		);
 
-		// Submenú: Iniciar sesión
+		// Submenú: Órdenes de compra (primera opción)
 		add_submenu_page(
-			'hoko-360',                              // Slug del menú padre
-			__( 'Iniciar sesión', 'hoko-360' ),     // Título de la página
-			__( 'Iniciar sesión', 'hoko-360' ),     // Título del submenú
-			'manage_options',                        // Capacidad requerida
-			'hoko-360',                              // Slug (mismo que el padre para que sea la primera opción)
-			array( $this, 'display_auth_page' )     // Función callback
-		);
-
-		// Submenú: Órdenes de compra
-		add_submenu_page(
-			'hoko-360',                              // Slug del menú padre
+			'hoko-360-orders',                        // Slug del menú padre
 			__( 'Órdenes de compra', 'hoko-360' ),  // Título de la página
 			__( 'Órdenes de compra', 'hoko-360' ),  // Título del submenú
 			'manage_options',                        // Capacidad requerida
-			'hoko-360-orders',                       // Slug del submenú
+			'hoko-360-orders',                       // Slug (mismo que el padre para que sea la primera opción)
 			array( $this, 'display_orders_page' )   // Función callback
+		);
+
+		// Separador visual
+		add_submenu_page(
+			'hoko-360-orders',                        // Slug del menú padre
+			'',                                       // Título vacío (separador)
+			'',                                       // Título vacío
+			'manage_options',                        // Capacidad requerida
+			'hoko-360-separator'                     // Slug único para separador
+		);
+
+		// Submenú: Iniciar sesión
+		add_submenu_page(
+			'hoko-360-orders',                        // Slug del menú padre
+			__( 'Iniciar sesión', 'hoko-360' ),     // Título de la página
+			__( 'Iniciar sesión', 'hoko-360' ),     // Título del submenú
+			'manage_options',                        // Capacidad requerida
+			'hoko-360-auth',                         // Slug del submenú
+			array( $this, 'display_auth_page' )     // Función callback
+		);
+
+		// Submenú: Sincronizar ciudades
+		add_submenu_page(
+			'hoko-360-orders',                        // Slug del menú padre
+			__( 'Sincronizar ciudades', 'hoko-360' ), // Título de la página
+			__( 'Sincronizar ciudades', 'hoko-360' ), // Título del submenú
+			'manage_options',                        // Capacidad requerida
+			'hoko-360-sync-cities',                  // Slug del submenú
+			array( $this, 'display_sync_cities_page' ) // Función callback
 		);
 
 		// Submenú oculto: Confirmar orden
@@ -196,7 +250,7 @@ class Hoko_Admin {
 	}
 
 	/**
-	 * Obtiene las órdenes de WooCommerce con su estado de sincronización.
+	 * Obtiene las órdenes de WooCommerce con su estado de sincronización (optimizado).
 	 *
 	 * @param int $limit Número de órdenes a obtener.
 	 * @return array Lista de órdenes.
@@ -210,29 +264,44 @@ class Hoko_Admin {
 				'orderby' => 'date',
 				'order'   => 'DESC',
 				'status'  => array( 'wc-processing', 'wc-completed', 'wc-pending' ),
+				'return'  => 'objects',
 			)
 		);
 		
-		$table_name = $wpdb->prefix . 'hoko_orders';
-		$orders_data = array();
+		if ( empty( $orders ) ) {
+			return array();
+		}
+
+		// Obtener IDs de órdenes para consulta batch
+		$order_ids = wp_list_pluck( $orders, 'id' );
+		$placeholders = implode( ',', array_fill( 0, count( $order_ids ), '%d' ) );
 		
+		$table_name = $wpdb->prefix . 'hoko_orders';
+		$sync_data = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT order_id, sync_status, sync_message, hoko_order_id, synced_at FROM $table_name WHERE order_id IN ($placeholders)",
+				$order_ids
+			)
+		);
+		
+		// Crear mapa de datos de sincronización
+		$sync_map = array();
+		foreach ( $sync_data as $data ) {
+			$sync_map[ $data->order_id ] = $data;
+		}
+		
+		// Combinar datos
+		$orders_data = array();
 		foreach ( $orders as $order ) {
 			$order_id = $order->get_id();
-			
-			// Obtener estado de sincronización
-			$sync_data = $wpdb->get_row(
-				$wpdb->prepare(
-					"SELECT * FROM $table_name WHERE order_id = %d",
-					$order_id
-				)
-			);
+			$sync = isset( $sync_map[ $order_id ] ) ? $sync_map[ $order_id ] : null;
 			
 			$orders_data[] = array(
-				'order'      => $order,
-				'sync_status' => $sync_data ? (int) $sync_data->sync_status : 0,
-				'sync_message' => $sync_data ? $sync_data->sync_message : '',
-				'hoko_order_id' => $sync_data ? $sync_data->hoko_order_id : '',
-				'synced_at' => $sync_data ? $sync_data->synced_at : '',
+				'order'         => $order,
+				'sync_status'   => $sync ? (int) $sync->sync_status : 0,
+				'sync_message'  => $sync ? $sync->sync_message : '',
+				'hoko_order_id' => $sync ? $sync->hoko_order_id : '',
+				'synced_at'     => $sync ? $sync->synced_at : '',
 			);
 		}
 		
@@ -240,12 +309,15 @@ class Hoko_Admin {
 	}
 
 	/**
-	 * Obtiene el token de autentificación guardado.
+	 * Obtiene el token de autentificación guardado (con cache).
 	 *
 	 * @return string Token de autentificación o cadena vacía si no existe.
 	 */
 	public function get_auth_token() {
-		return get_option( 'hoko_360_auth_token', '' );
+		if ( $this->cached_token === null ) {
+			$this->cached_token = get_option( 'hoko_360_auth_token', '' );
+		}
+		return $this->cached_token;
 	}
 
 	/**
@@ -254,8 +326,24 @@ class Hoko_Admin {
 	 * @return bool True si está autenticado, false en caso contrario.
 	 */
 	public function is_authenticated() {
-		$token = $this->get_auth_token();
-		return ! empty( $token );
+		return ! empty( $this->get_auth_token() );
+	}
+
+	/**
+	 * Obtiene datos de autentificación cacheados.
+	 *
+	 * @return array Datos de autentificación.
+	 */
+	private function get_auth_data() {
+		if ( $this->cached_auth_data === null ) {
+			$this->cached_auth_data = array(
+				'token'   => $this->get_auth_token(),
+				'country' => get_option( 'hoko_360_auth_country', 'colombia' ),
+				'email'   => get_option( 'hoko_360_auth_email', '' ),
+				'time'    => get_option( 'hoko_360_auth_time', 0 )
+			);
+		}
+		return $this->cached_auth_data;
 	}
 
 	/**
@@ -265,89 +353,58 @@ class Hoko_Admin {
 	 * @return string URL del endpoint.
 	 */
 	private function get_api_endpoint( $country ) {
-		$endpoints = array(
-			'colombia' => 'https://v4.hoko.com.co/api/login',
-			'ecuador'  => 'https://hoko.com.ec/api/login',
-			'usa'      => 'https://hoko360.com/api/login',
-		);
-
-		return isset( $endpoints[ $country ] ) ? $endpoints[ $country ] : $endpoints['colombia'];
+		return isset( $this->api_endpoints[ $country ]['login'] ) 
+			? $this->api_endpoints[ $country ]['login'] 
+			: $this->api_endpoints['colombia']['login'];
 	}
 
 	/**
-	 * Obtiene la URL base de la API según el país (sin /api/login).
+	 * Obtiene la URL base de la API según el país.
 	 *
 	 * @param string $country Código del país.
 	 * @return string URL base de la API.
 	 */
 	public function get_api_base_url( $country = '' ) {
 		if ( empty( $country ) ) {
-			$country = get_option( 'hoko_360_auth_country', 'colombia' );
+			$auth_data = $this->get_auth_data();
+			$country = $auth_data['country'];
 		}
 
-		$base_urls = array(
-			'colombia' => 'https://v4.hoko.com.co/api',
-			'ecuador'  => 'https://hoko.com.ec/api',
-			'usa'      => 'https://hoko360.com/api',
-		);
+		return isset( $this->api_endpoints[ $country ]['base'] ) 
+			? $this->api_endpoints[ $country ]['base'] 
+			: $this->api_endpoints['colombia']['base'];
+	}
 
-		return isset( $base_urls[ $country ] ) ? $base_urls[ $country ] : $base_urls['colombia'];
+	/**
+	 * Verifica nonce y permisos para peticiones AJAX.
+	 */
+	private function verify_ajax_request() {
+		check_ajax_referer( 'hoko_auth_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'No tienes permisos para realizar esta acción.', 'hoko-360' ) ) );
+		}
 	}
 
 	/**
 	 * Maneja la petición AJAX de autentificación.
 	 */
 	public function handle_auth_request() {
-		// Verificar nonce
-		check_ajax_referer( 'hoko_auth_nonce', 'nonce' );
+		$this->verify_ajax_request();
 
-		// Verificar permisos
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'No tienes permisos para realizar esta acción.', 'hoko-360' ) ) );
-		}
-
-		// Obtener datos del formulario
+		// Obtener y validar datos del formulario
 		$email    = isset( $_POST['email'] ) ? sanitize_email( $_POST['email'] ) : '';
 		$password = isset( $_POST['password'] ) ? $_POST['password'] : '';
 		$country  = isset( $_POST['country'] ) ? sanitize_text_field( $_POST['country'] ) : 'colombia';
 
-		// Validar datos
-		if ( empty( $email ) || empty( $password ) || empty( $country ) ) {
-			wp_send_json_error( array( 'message' => __( 'Por favor completa todos los campos.', 'hoko-360' ) ) );
-		}
-
-		if ( ! is_email( $email ) ) {
-			wp_send_json_error( array( 'message' => __( 'Por favor ingresa un email válido.', 'hoko-360' ) ) );
-		}
-
-		// Validar país
-		$valid_countries = array( 'colombia', 'ecuador', 'usa' );
-		if ( ! in_array( $country, $valid_countries, true ) ) {
-			wp_send_json_error( array( 'message' => __( 'País no válido.', 'hoko-360' ) ) );
-		}
-
-		// Obtener endpoint según el país
-		$api_endpoint = $this->get_api_endpoint( $country );
+		$this->validate_auth_data( $email, $password, $country );
 
 		// Realizar petición a la API de Hoko
-		$response = wp_remote_post(
-			$api_endpoint,
-			array(
-				'method'  => 'POST',
-				'timeout' => 45,
-				'headers' => array(
-					'Content-Type' => 'application/json',
-				),
-				'body'    => wp_json_encode(
-					array(
-						'email'    => $email,
-						'password' => $password,
-					)
-				),
-			)
-		);
+		$response = $this->make_api_request( $this->get_api_endpoint( $country ), array(
+			'email'    => $email,
+			'password' => $password,
+		) );
 
-		// Verificar si hay error en la petición
 		if ( is_wp_error( $response ) ) {
 			wp_send_json_error(
 				array(
@@ -356,27 +413,69 @@ class Hoko_Admin {
 			);
 		}
 
-		// Obtener el código de respuesta
+		$this->process_auth_response( $response, $country, $email );
+	}
+
+	/**
+	 * Valida datos de autentificación.
+	 */
+	private function validate_auth_data( $email, $password, $country ) {
+		if ( empty( $email ) || empty( $password ) || empty( $country ) ) {
+			wp_send_json_error( array( 'message' => __( 'Por favor completa todos los campos.', 'hoko-360' ) ) );
+		}
+
+		if ( ! is_email( $email ) ) {
+			wp_send_json_error( array( 'message' => __( 'Por favor ingresa un email válido.', 'hoko-360' ) ) );
+		}
+
+		if ( ! in_array( $country, array_keys( $this->api_endpoints ), true ) ) {
+			wp_send_json_error( array( 'message' => __( 'País no válido.', 'hoko-360' ) ) );
+		}
+	}
+
+	/**
+	 * Realiza petición a la API de Hoko.
+	 */
+	private function make_api_request( $endpoint, $data, $token = '' ) {
+		$headers = array( 'Content-Type' => 'application/json' );
+		if ( $token ) {
+			$headers['Authorization'] = 'Bearer ' . $token;
+		}
+
+		return wp_remote_post(
+			$endpoint,
+			array(
+				'method'  => 'POST',
+				'timeout' => 45,
+				'headers' => $headers,
+				'body'    => wp_json_encode( $data ),
+			)
+		);
+	}
+
+	/**
+	 * Procesa respuesta de autentificación.
+	 */
+	private function process_auth_response( $response, $country, $email ) {
 		$response_code = wp_remote_retrieve_response_code( $response );
 		$response_body = wp_remote_retrieve_body( $response );
 		$data          = json_decode( $response_body, true );
 
-		// Verificar respuesta exitosa
-		if ( $response_code === 200 ) {
-			// Guardar token - la API devuelve el token dentro de data.token
-			if ( isset( $data['token'] ) ) {
-				// Guardar el token
-				update_option( 'hoko_360_auth_token', sanitize_text_field( $data['token'] ) );
-				
-				// Guardar el país conectado
-				update_option( 'hoko_360_auth_country', $country );
-				
-				// Guardar también el email del usuario autenticado
-				update_option( 'hoko_360_auth_email', $email );
-				
-				// Guardar timestamp de autentificación
-				update_option( 'hoko_360_auth_time', current_time( 'timestamp' ) );
-			}
+		if ( $response_code === 200 && isset( $data['token'] ) ) {
+			// Actualizar cache
+			$this->cached_token = sanitize_text_field( $data['token'] );
+			$this->cached_auth_data = array(
+				'token'   => $this->cached_token,
+				'country' => $country,
+				'email'   => $email,
+				'time'    => current_time( 'timestamp' )
+			);
+
+			// Guardar en base de datos
+			update_option( 'hoko_360_auth_token', $this->cached_token );
+			update_option( 'hoko_360_auth_country', $country );
+			update_option( 'hoko_360_auth_email', $email );
+			update_option( 'hoko_360_auth_time', $this->cached_auth_data['time'] );
 
 			wp_send_json_success(
 				array(
@@ -385,7 +484,6 @@ class Hoko_Admin {
 				)
 			);
 		} else {
-			// Error en la autentificación
 			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error en la autentificación.', 'hoko-360' );
 			wp_send_json_error( array( 'message' => $error_message ) );
 		}
@@ -395,56 +493,33 @@ class Hoko_Admin {
 	 * Maneja la petición AJAX para crear orden en Hoko.
 	 */
 	public function handle_create_order_request() {
-		// Verificar nonce
-		check_ajax_referer( 'hoko_auth_nonce', 'nonce' );
-
-		// Verificar permisos
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'No tienes permisos para realizar esta acción.', 'hoko-360' ) ) );
-		}
+		$this->verify_ajax_request();
 
 		// Verificar autenticación
-		$token = $this->get_auth_token();
-		if ( empty( $token ) ) {
+		if ( ! $this->is_authenticated() ) {
 			wp_send_json_error( array( 'message' => __( 'No estás autenticado.', 'hoko-360' ) ) );
 		}
 
-		// Obtener ID de orden
+		// Validar y obtener orden
 		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
 		if ( ! $order_id ) {
 			wp_send_json_error( array( 'message' => __( 'ID de orden no válido.', 'hoko-360' ) ) );
 		}
 
-		// Obtener orden de WooCommerce
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
 			wp_send_json_error( array( 'message' => __( 'Orden no encontrada.', 'hoko-360' ) ) );
 		}
 
-		// Preparar datos para Hoko desde el formulario
+		// Preparar datos y realizar petición
 		$hoko_data = $this->prepare_order_data_from_form();
+		$auth_data = $this->get_auth_data();
+		$api_url = $this->get_api_base_url( $auth_data['country'] ) . '/member/order/createV2';
 
-		// Obtener país y endpoint
-		$country = get_option( 'hoko_360_auth_country', 'colombia' );
-		$api_url = $this->get_api_base_url( $country ) . '/member/order/createV2';
+		$response = $this->make_api_request( $api_url, $hoko_data, $auth_data['token'] );
 
-		// Realizar petición a Hoko
-		$response = wp_remote_post(
-			$api_url,
-			array(
-				'method'  => 'POST',
-				'timeout' => 45,
-				'headers' => array(
-					'Content-Type'  => 'application/json',
-					'Authorization' => 'Bearer ' . $token,
-				),
-				'body'    => wp_json_encode( $hoko_data ),
-			)
-		);
-
-		// Verificar errores de conexión
 		if ( is_wp_error( $response ) ) {
-			$this->save_order_sync_status( $order_id, 2, $response->get_error_message(), null, $country );
+			$this->save_order_sync_status( $order_id, 2, $response->get_error_message(), null, $auth_data['country'] );
 			wp_send_json_error(
 				array(
 					'message' => __( 'Error al conectar con Hoko: ', 'hoko-360' ) . $response->get_error_message(),
@@ -452,13 +527,18 @@ class Hoko_Admin {
 			);
 		}
 
-		// Procesar respuesta
+		$this->process_order_response( $response, $order_id, $auth_data['country'] );
+	}
+
+	/**
+	 * Procesa respuesta de creación de orden.
+	 */
+	private function process_order_response( $response, $order_id, $country ) {
 		$response_code = wp_remote_retrieve_response_code( $response );
 		$response_body = wp_remote_retrieve_body( $response );
 		$data          = json_decode( $response_body, true );
 
 		if ( $response_code === 200 || $response_code === 201 ) {
-			// Éxito
 			$hoko_order_id = isset( $data['id'] ) ? $data['id'] : ( isset( $data['order_id'] ) ? $data['order_id'] : null );
 			$this->save_order_sync_status( $order_id, 1, __( 'Orden creada exitosamente.', 'hoko-360' ), $hoko_order_id, $country );
 			
@@ -469,34 +549,54 @@ class Hoko_Admin {
 				)
 			);
 		} else {
-			// Error
 			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error al crear la orden.', 'hoko-360' );
 			$this->save_order_sync_status( $order_id, 2, $error_message, null, $country );
-			
 			wp_send_json_error( array( 'message' => $error_message ) );
 		}
 	}
 
 	/**
-	 * Prepara los datos de la orden desde el formulario de confirmación.
+	 * Prepara los datos de la orden desde el formulario de confirmación (optimizado).
 	 *
 	 * @return array Datos formateados para Hoko.
 	 */
 	private function prepare_order_data_from_form() {
-		// Datos del cliente
-		$customer = array(
-			'name'           => isset( $_POST['customer']['name'] ) ? sanitize_text_field( $_POST['customer']['name'] ) : '',
-			'email'          => isset( $_POST['customer']['email'] ) ? sanitize_email( $_POST['customer']['email'] ) : '',
-			'identification' => isset( $_POST['customer']['identification'] ) ? sanitize_text_field( $_POST['customer']['identification'] ) : '',
-			'phone'          => isset( $_POST['customer']['phone'] ) ? sanitize_text_field( $_POST['customer']['phone'] ) : '',
-			'address'        => isset( $_POST['customer']['address'] ) ? sanitize_text_field( $_POST['customer']['address'] ) : '',
-			'city_id'        => isset( $_POST['customer']['city_id'] ) ? sanitize_text_field( $_POST['customer']['city_id'] ) : '1',
-		);
+		$customer = $this->sanitize_customer_data( $_POST['customer'] ?? array() );
+		$stocks = $this->sanitize_stocks_data( $_POST['stocks'] ?? array() );
+		$measures = $this->sanitize_measures_data( $_POST['measures'] ?? array() );
 
-		// Productos (stocks)
+		return array(
+			'customer'    => $customer,
+			'stocks'      => $stocks,
+			'payment'     => isset( $_POST['payment'] ) ? absint( $_POST['payment'] ) : 0,
+			'courier_id'  => isset( $_POST['courier_id'] ) ? absint( $_POST['courier_id'] ) : 44,
+			'contain'     => isset( $_POST['contain'] ) ? sanitize_text_field( $_POST['contain'] ) : '',
+			'measures'    => $measures,
+			'external_id' => isset( $_POST['external_id'] ) ? sanitize_text_field( $_POST['external_id'] ) : '',
+		);
+	}
+
+	/**
+	 * Sanitiza datos del cliente.
+	 */
+	private function sanitize_customer_data( $customer_data ) {
+		return array(
+			'name'           => isset( $customer_data['name'] ) ? sanitize_text_field( $customer_data['name'] ) : '',
+			'email'          => isset( $customer_data['email'] ) ? sanitize_email( $customer_data['email'] ) : '',
+			'identification' => isset( $customer_data['identification'] ) ? sanitize_text_field( $customer_data['identification'] ) : '',
+			'phone'          => isset( $customer_data['phone'] ) ? sanitize_text_field( $customer_data['phone'] ) : '',
+			'address'        => isset( $customer_data['address'] ) ? sanitize_text_field( $customer_data['address'] ) : '',
+			'city_id'        => isset( $customer_data['city_id'] ) ? sanitize_text_field( $customer_data['city_id'] ) : '1',
+		);
+	}
+
+	/**
+	 * Sanitiza datos de stocks.
+	 */
+	private function sanitize_stocks_data( $stocks_data ) {
 		$stocks = array();
-		if ( isset( $_POST['stocks'] ) && is_array( $_POST['stocks'] ) ) {
-			foreach ( $_POST['stocks'] as $stock_data ) {
+		if ( is_array( $stocks_data ) ) {
+			foreach ( $stocks_data as $stock_data ) {
 				$sku = isset( $stock_data['sku'] ) ? sanitize_text_field( $stock_data['sku'] ) : '';
 				if ( $sku ) {
 					$stocks[ $sku ] = array(
@@ -506,111 +606,89 @@ class Hoko_Admin {
 				}
 			}
 		}
+		return $stocks;
+	}
 
-		// Método de pago
-		$payment = isset( $_POST['payment'] ) ? absint( $_POST['payment'] ) : 0;
-
-		// Courier ID
-		$courier_id = isset( $_POST['courier_id'] ) ? absint( $_POST['courier_id'] ) : 44;
-
-		// Contenido
-		$contain = isset( $_POST['contain'] ) ? sanitize_text_field( $_POST['contain'] ) : '';
-
-		// Medidas
-		$measures = array(
-			'height' => isset( $_POST['measures']['height'] ) ? sanitize_text_field( $_POST['measures']['height'] ) : '10',
-			'width'  => isset( $_POST['measures']['width'] ) ? sanitize_text_field( $_POST['measures']['width'] ) : '10',
-			'length' => isset( $_POST['measures']['length'] ) ? sanitize_text_field( $_POST['measures']['length'] ) : '10',
-			'weight' => isset( $_POST['measures']['weight'] ) ? sanitize_text_field( $_POST['measures']['weight'] ) : '1',
-		);
-
-		// ID externo
-		$external_id = isset( $_POST['external_id'] ) ? sanitize_text_field( $_POST['external_id'] ) : '';
-
+	/**
+	 * Sanitiza datos de medidas.
+	 */
+	private function sanitize_measures_data( $measures_data ) {
 		return array(
-			'customer'    => $customer,
-			'stocks'      => $stocks,
-			'payment'     => $payment,
-			'courier_id'  => $courier_id,
-			'contain'     => $contain,
-			'measures'    => $measures,
-			'external_id' => $external_id,
+			'height' => isset( $measures_data['height'] ) ? sanitize_text_field( $measures_data['height'] ) : '10',
+			'width'  => isset( $measures_data['width'] ) ? sanitize_text_field( $measures_data['width'] ) : '10',
+			'length' => isset( $measures_data['length'] ) ? sanitize_text_field( $measures_data['length'] ) : '10',
+			'weight' => isset( $measures_data['weight'] ) ? sanitize_text_field( $measures_data['weight'] ) : '1',
 		);
 	}
 
 	/**
-	 * Prepara los datos de la orden de WooCommerce para enviar a Hoko.
+	 * Prepara los datos de la orden de WooCommerce para enviar a Hoko (optimizado).
 	 *
 	 * @param WC_Order $order Orden de WooCommerce.
 	 * @return array Datos formateados para Hoko.
 	 */
 	private function prepare_order_data( $order ) {
-		// Datos del cliente
 		$customer = array(
 			'name'           => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
 			'email'          => $order->get_billing_email(),
 			'identification' => $order->get_meta( '_billing_document', true ) ?: '0000000000',
 			'phone'          => $order->get_billing_phone(),
-			'address'        => $order->get_billing_address_1() . ( $order->get_billing_address_2() ? ' ' . $order->get_billing_address_2() : '' ),
-			'city_id'        => '1', // Por defecto, puede configurarse
+			'address'        => $this->format_billing_address( $order ),
+			'city_id'        => '1',
 		);
 
-		// Productos (stocks)
+		$stocks = $this->get_order_stocks( $order );
+		$contain = $this->get_order_contain( $order );
+
+		return array(
+			'customer'    => $customer,
+			'stocks'      => $stocks,
+			'payment'     => 0,
+			'courier_id'  => 44,
+			'contain'     => $contain,
+			'measures'    => array( 'height' => '10', 'width' => '10', 'length' => '10', 'weight' => '1' ),
+			'external_id' => $order->get_order_number(),
+		);
+	}
+
+	/**
+	 * Formatea la dirección de facturación.
+	 */
+	private function format_billing_address( $order ) {
+		$address = $order->get_billing_address_1();
+		$address2 = $order->get_billing_address_2();
+		return $address . ( $address2 ? ' ' . $address2 : '' );
+	}
+
+	/**
+	 * Obtiene stocks de la orden.
+	 */
+	private function get_order_stocks( $order ) {
 		$stocks = array();
 		foreach ( $order->get_items() as $item ) {
 			$product = $item->get_product();
 			if ( $product ) {
-				$product_id = $product->get_id();
-				$sku        = $product->get_sku() ?: $product_id;
-				
+				$sku = $product->get_sku() ?: $product->get_id();
 				$stocks[ $sku ] = array(
 					'amount' => $item->get_quantity(),
 					'price'  => floatval( $item->get_total() / $item->get_quantity() ),
 				);
 			}
 		}
-
-		// Método de pago (0 por defecto, puede configurarse)
-		$payment = 0;
-
-		// Courier ID (44 por defecto, puede configurarse)
-		$courier_id = 44;
-
-		// Contenido (descripción de productos)
-		$contain = '';
-		$items_names = array();
-		foreach ( $order->get_items() as $item ) {
-			$items_names[] = $item->get_name();
-		}
-		$contain = implode( ', ', $items_names );
-		if ( strlen( $contain ) > 100 ) {
-			$contain = substr( $contain, 0, 97 ) . '...';
-		}
-
-		// Medidas (valores por defecto, pueden configurarse)
-		$measures = array(
-			'height' => '10',
-			'width'  => '10',
-			'length' => '10',
-			'weight' => '1',
-		);
-
-		// ID externo (número de orden de WooCommerce)
-		$external_id = $order->get_order_number();
-
-		return array(
-			'customer'    => $customer,
-			'stocks'      => $stocks,
-			'payment'     => $payment,
-			'courier_id'  => $courier_id,
-			'contain'     => $contain,
-			'measures'    => $measures,
-			'external_id' => $external_id,
-		);
+		return $stocks;
 	}
 
 	/**
-	 * Guarda el estado de sincronización de una orden.
+	 * Obtiene contenido/descripción de la orden.
+	 */
+	private function get_order_contain( $order ) {
+		$items_names = wp_list_pluck( $order->get_items(), 'name' );
+		$contain = implode( ', ', $items_names );
+		return strlen( $contain ) > 100 ? substr( $contain, 0, 97 ) . '...' : $contain;
+	}
+
+	/**
+	 * Guarda el estado de sincronización de una orden (optimizado con UPSERT).
 	 *
 	 * @param int    $order_id       ID de la orden de WooCommerce.
 	 * @param int    $sync_status    Estado de sincronización (0=pending, 1=synced, 2=failed).
@@ -638,44 +716,33 @@ class Hoko_Admin {
 			$data['synced_at'] = current_time( 'mysql' );
 		}
 		
-		// Verificar si ya existe
-		$exists = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT id FROM $table_name WHERE order_id = %d",
-				$order_id
-			)
+		// Usar REPLACE INTO para simplificar lógica (más eficiente)
+		$wpdb->replace(
+			$table_name,
+			$data,
+			array( '%d', '%d', '%s', '%s', '%s', '%s' )
 		);
+	}
+
+	/**
+	 * Muestra la página de sincronización de ciudades.
+	 */
+	public function display_sync_cities_page() {
+		// Verificar si está autenticado
+		$is_authenticated = $this->is_authenticated();
 		
-		if ( $exists ) {
-			// Actualizar
-			$wpdb->update(
-				$table_name,
-				$data,
-				array( 'order_id' => $order_id ),
-				array( '%d', '%d', '%s', '%s' ),
-				array( '%d' )
-			);
-		} else {
-			// Insertar
-			$wpdb->insert(
-				$table_name,
-				$data,
-				array( '%d', '%d', '%s', '%s' )
-			);
-		}
+		require_once plugin_dir_path( __FILE__ ) . 'partials/hoko-admin-sync-cities.php';
 	}
 
 	/**
 	 * Maneja la petición AJAX para cerrar sesión.
 	 */
 	public function handle_logout_request() {
-		// Verificar nonce
-		check_ajax_referer( 'hoko_auth_nonce', 'nonce' );
+		$this->verify_ajax_request();
 
-		// Verificar permisos
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'No tienes permisos para realizar esta acción.', 'hoko-360' ) ) );
-		}
+		// Limpiar cache
+		$this->cached_token = null;
+		$this->cached_auth_data = null;
 
 		// Eliminar token y datos de autentificación
 		delete_option( 'hoko_360_auth_token' );
