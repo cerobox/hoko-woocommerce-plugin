@@ -143,15 +143,7 @@ class Hoko_Admin {
 			array( $this, 'display_orders_page' )   // Función callback
 		);
 
-		// Separador visual
-		add_submenu_page(
-			'hoko-360-orders',                        // Slug del menú padre
-			'',                                       // Título vacío (separador)
-			'',                                       // Título vacío
-			'manage_options',                        // Capacidad requerida
-			'hoko-360-separator'                     // Slug único para separador
-		);
-
+		
 		// Submenú: Iniciar sesión
 		add_submenu_page(
 			'hoko-360-orders',                        // Slug del menú padre
@@ -732,6 +724,224 @@ class Hoko_Admin {
 		$is_authenticated = $this->is_authenticated();
 		
 		require_once plugin_dir_path( __FILE__ ) . 'partials/hoko-admin-sync-cities.php';
+	}
+
+	/**
+	 * Maneja la petición AJAX para sincronizar estados y ciudades.
+	 */
+	public function handle_sync_cities_request() {
+		$this->verify_ajax_request();
+
+		// Verificar autenticación
+		if ( ! $this->is_authenticated() ) {
+			wp_send_json_error( array( 'message' => __( 'No estás autenticado.', 'hoko-360' ) ) );
+		}
+
+		$auth_data = $this->get_auth_data();
+		$results = array(
+			'states' => array( 'synced' => 0, 'errors' => 0 ),
+			'cities' => array( 'synced' => 0, 'errors' => 0 ),
+			'details' => array()
+		);
+
+		try {
+			// Sincronizar estados
+			$results['states'] = $this->sync_states( $auth_data['token'], $auth_data['country'] );
+			
+			// Sincronizar ciudades
+			$results['cities'] = $this->sync_cities( $auth_data['token'], $auth_data['country'] );
+
+			wp_send_json_success( array(
+				'message' => __( 'Sincronización completada exitosamente.', 'hoko-360' ),
+				'results' => $results
+			) );
+
+		} catch ( Exception $e ) {
+			wp_send_json_error( array(
+				'message' => __( 'Error en la sincronización: ', 'hoko-360' ) . $e->getMessage()
+			) );
+		}
+	}
+
+	/**
+	 * Sincroniza estados desde Hoko API.
+	 */
+	private function sync_states( $token, $country ) {
+		$api_url = $this->get_api_base_url( $country ) . '/member/get-states';
+		$response = $this->make_api_request( $api_url, array(), $token );
+
+		if ( is_wp_error( $response ) ) {
+			throw new Exception( __( 'Error al obtener estados: ', 'hoko-360' ) . $response->get_error_message() );
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$response_body = wp_remote_retrieve_body( $response );
+		$data = json_decode( $response_body, true );
+
+		if ( $response_code !== 200 ) {
+			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error al obtener estados', 'hoko-360' );
+			throw new Exception( $error_message );
+		}
+
+		return $this->save_states( $data );
+	}
+
+	/**
+	 * Sincroniza ciudades desde Hoko API.
+	 */
+	private function sync_cities( $token, $country ) {
+		$api_url = $this->get_api_base_url( $country ) . '/member/get-cities';
+		$response = $this->make_api_request( $api_url, array(), $token );
+
+		if ( is_wp_error( $response ) ) {
+			throw new Exception( __( 'Error al obtener ciudades: ', 'hoko-360' ) . $response->get_error_message() );
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$response_body = wp_remote_retrieve_body( $response );
+		$data = json_decode( $response_body, true );
+
+		if ( $response_code !== 200 ) {
+			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error al obtener ciudades', 'hoko-360' );
+			throw new Exception( $error_message );
+		}
+
+		return $this->save_cities( $data );
+	}
+
+	/**
+	 * Guarda estados en la base de datos.
+	 */
+	private function save_states( $states_data ) {
+		global $wpdb;
+		
+		$table_name = $wpdb->prefix . 'hoko_country_states';
+		$synced = 0;
+		$errors = 0;
+
+		// Crear tabla si no existe
+		$this->ensure_states_table();
+
+		// Limpiar estados existentes
+		$wpdb->query( "TRUNCATE TABLE $table_name" );
+
+		if ( is_array( $states_data ) ) {
+			foreach ( $states_data as $state ) {
+				if ( isset( $state['id'] ) && isset( $state['name'] ) ) {
+					$result = $wpdb->insert(
+						$table_name,
+						array(
+							'state_id' => sanitize_text_field( $state['id'] ),
+							'state_name' => sanitize_text_field( $state['name'] ),
+							'state_code' => isset( $state['code'] ) ? sanitize_text_field( $state['code'] ) : '',
+							'created_at' => current_time( 'mysql' )
+						),
+						array( '%d', '%s', '%s', '%s' )
+					);
+					
+					if ( $result !== false ) {
+						$synced++;
+					} else {
+						$errors++;
+					}
+				} else {
+					$errors++;
+				}
+			}
+		}
+
+		return array( 'synced' => $synced, 'errors' => $errors );
+	}
+
+	/**
+	 * Guarda ciudades en la base de datos.
+	 */
+	private function save_cities( $cities_data ) {
+		global $wpdb;
+		
+		$table_name = $wpdb->prefix . 'hoko_country_cities';
+		$synced = 0;
+		$errors = 0;
+
+		// Crear tabla si no existe
+		$this->ensure_cities_table();
+
+		// Limpiar ciudades existentes
+		$wpdb->query( "TRUNCATE TABLE $table_name" );
+
+		if ( is_array( $cities_data ) ) {
+			foreach ( $cities_data as $city ) {
+				if ( isset( $city['id'] ) && isset( $city['name'] ) && isset( $city['state_id'] ) ) {
+					$result = $wpdb->insert(
+						$table_name,
+						array(
+							'city_id' => sanitize_text_field( $city['id'] ),
+							'city_name' => sanitize_text_field( $city['name'] ),
+							'state_id' => sanitize_text_field( $city['state_id'] ),
+							'created_at' => current_time( 'mysql' )
+						),
+						array( '%d', '%s', '%d', '%s' )
+					);
+					
+					if ( $result !== false ) {
+						$synced++;
+					} else {
+						$errors++;
+					}
+				} else {
+					$errors++;
+				}
+			}
+		}
+
+		return array( 'synced' => $synced, 'errors' => $errors );
+	}
+
+	/**
+	 * Crea tabla de estados si no existe.
+	 */
+	private function ensure_states_table() {
+		global $wpdb;
+		
+		$table_name = $wpdb->prefix . 'hoko_country_states';
+		$charset_collate = $wpdb->get_charset_collate();
+
+		$sql = "CREATE TABLE IF NOT EXISTS $table_name (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			state_id bigint(20) NOT NULL,
+			state_name varchar(100) NOT NULL,
+			state_code varchar(10) DEFAULT '',
+			created_at datetime DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			UNIQUE KEY state_id (state_id)
+		) $charset_collate;";
+
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		dbDelta( $sql );
+	}
+
+	/**
+	 * Crea tabla de ciudades si no existe.
+	 */
+	private function ensure_cities_table() {
+		global $wpdb;
+		
+		$table_name = $wpdb->prefix . 'hoko_country_cities';
+		$charset_collate = $wpdb->get_charset_collate();
+
+		$sql = "CREATE TABLE IF NOT EXISTS $table_name (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			city_id bigint(20) NOT NULL,
+			city_name varchar(100) NOT NULL,
+			state_id bigint(20) NOT NULL,
+			created_at datetime DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			UNIQUE KEY city_id (city_id),
+			KEY state_id (state_id)
+		) $charset_collate;";
+
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		dbDelta( $sql );
 	}
 
 	/**

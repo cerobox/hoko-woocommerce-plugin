@@ -35,6 +35,8 @@ function hoko_360_activate() {
 	
 	// Crear tabla para tracking de órdenes
 	hoko_360_create_orders_table();
+	hoko_360_create_states_table();
+	hoko_360_create_cities_table();
 }
 register_activation_hook( __FILE__, 'hoko_360_activate' );
 
@@ -59,6 +61,53 @@ function hoko_360_create_orders_table() {
 		PRIMARY KEY  (id),
 		UNIQUE KEY order_id (order_id),
 		KEY sync_status (sync_status)
+	) $charset_collate;";
+	
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	dbDelta( $sql );
+}
+
+/**
+ * Crea la tabla para estados.
+ */
+function hoko_360_create_states_table() {
+	global $wpdb;
+	
+	$table_name      = $wpdb->prefix . 'hoko_country_states';
+	$charset_collate = $wpdb->get_charset_collate();
+	
+	$sql = "CREATE TABLE IF NOT EXISTS $table_name (
+		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+		state_id bigint(20) NOT NULL,
+		state_name varchar(100) NOT NULL,
+		state_code varchar(10) DEFAULT '',
+		created_at datetime DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY (id),
+		UNIQUE KEY state_id (state_id)
+	) $charset_collate;";
+	
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	dbDelta( $sql );
+}
+
+/**
+ * Crea la tabla para ciudades.
+ */
+function hoko_360_create_cities_table() {
+	global $wpdb;
+	
+	$table_name      = $wpdb->prefix . 'hoko_country_cities';
+	$charset_collate = $wpdb->get_charset_collate();
+	
+	$sql = "CREATE TABLE IF NOT EXISTS $table_name (
+		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+		city_id bigint(20) NOT NULL,
+		city_name varchar(100) NOT NULL,
+		state_id bigint(20) NOT NULL,
+		created_at datetime DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY (id),
+		UNIQUE KEY city_id (city_id),
+		KEY state_id (state_id)
 	) $charset_collate;";
 	
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -96,5 +145,6 @@ function hoko_360_run() {
 	add_action( 'wp_ajax_hoko_authenticate', array( $plugin_admin, 'handle_auth_request' ) );
 	add_action( 'wp_ajax_hoko_logout', array( $plugin_admin, 'handle_logout_request' ) );
 	add_action( 'wp_ajax_hoko_create_order', array( $plugin_admin, 'handle_create_order_request' ) );
+	add_action( 'wp_ajax_hoko_sync_cities', array( $plugin_admin, 'handle_sync_cities_request' ) );
 }
 add_action( 'plugins_loaded', 'hoko_360_run' );

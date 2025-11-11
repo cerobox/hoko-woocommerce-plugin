@@ -2,6 +2,28 @@
  * Estilos para el área de administración de Hoko 360
  */
 
+/* Separador visual en el menú de administración */
+#adminmenu .wp-submenu .wp-submenu-head {
+	border-bottom: 1px solid #dcdcde;
+	margin-bottom: 8px;
+	padding-bottom: 8px;
+}
+
+#adminmenu .wp-submenu li:nth-child(2) {
+	position: relative;
+}
+
+#adminmenu .wp-submenu li:nth-child(2)::after {
+	content: '';
+	position: absolute;
+	bottom: -8px;
+	left: 12px;
+	right: 12px;
+	height: 1px;
+	background: #dcdcde;
+	opacity: 0.7;
+}
+
 .hoko-auth-container {
 	max-width: 800px;
 	margin: 20px 0;
@@ -232,4 +254,80 @@
 #hoko-confirm-message.notice {
 	padding: 12px;
 	margin: 20px 0;
+}
+
+/* Estilos para la página de sincronización de ciudades */
+.hoko-sync-section {
+	margin-top: 20px;
+	padding: 20px;
+	border: 1px solid #e5e5e5;
+	border-radius: 4px;
+	background: #fafafa;
+}
+
+.hoko-sync-info {
+	margin-bottom: 20px;
+}
+
+.hoko-sync-info ul {
+	margin: 10px 0 0 20px;
+}
+
+.hoko-sync-info li {
+	margin-bottom: 5px;
+	color: #646970;
+}
+
+.hoko-sync-actions {
+	margin-bottom: 20px;
+}
+
+.hoko-sync-actions .button {
+	margin-right: 10px;
+}
+
+.hoko-sync-actions .spinner {
+	float: none;
+	margin: 0 0 0 10px;
+	vertical-align: middle;
+}
+
+#hoko-sync-results {
+	margin-top: 20px;
+	padding: 15px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fff;
+}
+
+#hoko-sync-stats {
+	margin-bottom: 15px;
+}
+
+#hoko-sync-stats .sync-stat {
+	display: inline-block;
+	margin-right: 20px;
+	padding: 8px 12px;
+	background: #f0f0f1;
+	border-radius: 3px;
+	font-size: 13px;
+}
+
+#hoko-sync-stats .sync-stat strong {
+	color: #1d2327;
+}
+
+#hoko-sync-details {
+	font-size: 13px;
+	color: #646970;
+}
+
+#hoko-sync-details .sync-item {
+	margin-bottom: 8px;
+	padding: 5px 0;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+#hoko-sync-details .sync-item:last-child {
+	border-bottom: none;
 }

@@ -27,11 +27,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<?php else : ?>
 		<div class="card">
 			<h2><?php _e( 'Sincronización de Ciudades', 'hoko-360' ); ?></h2>
-			<p><?php _e( 'Esta sección estará disponible próximamente.', 'hoko-360' ); ?></p>
+			<p><?php _e( 'Sincroniza los estados y ciudades desde Hoko 360 para usarlos en tus órdenes de compra.', 'hoko-360' ); ?></p>
 			
-			<!-- Contenido futuro para sincronización de ciudades -->
-			<div class="hoko-placeholder">
-				<p><?php _e( 'Aquí podrás sincronizar las ciudades disponibles en Hoko 360 con tu tienda WooCommerce.', 'hoko-360' ); ?></p>
+			<div class="hoko-sync-section">
+				<div class="hoko-sync-info">
+					<p><strong><?php _e( '¿Qué se sincronizará?', 'hoko-360' ); ?></strong></p>
+					<ul>
+						<li><?php _e( 'Estados/Departamentos disponibles', 'hoko-360' ); ?></li>
+						<li><?php _e( 'Ciudades por cada estado/departamento', 'hoko-360' ); ?></li>
+					</ul>
+				</div>
+				
+				<div class="hoko-sync-actions">
+					<button type="button" id="hoko-sync-cities-btn" class="button button-primary">
+						<span class="dashicons dashicons-update-alt"></span>
+						<?php _e( 'Sincronizar Estados y Ciudades', 'hoko-360' ); ?>
+					</button>
+					<span class="spinner"></span>
+				</div>
+				
+				<div id="hoko-sync-message"></div>
+				
+				<div id="hoko-sync-results" style="display: none;">
+					<h3><?php _e( 'Resultados de la sincronización', 'hoko-360' ); ?></h3>
+					<div id="hoko-sync-stats"></div>
+					<div id="hoko-sync-details"></div>
+				</div>
 			</div>
 		</div>
 	<?php endif; ?>

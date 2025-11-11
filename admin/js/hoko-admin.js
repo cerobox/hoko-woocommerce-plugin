@@ -196,6 +196,101 @@
 			});
 		});
 		
+		// Manejo del botón de sincronización de ciudades
+		$('#hoko-sync-cities-btn').on('click', function(e) {
+			e.preventDefault();
+			
+			var $button = $(this);
+			var $spinner = $button.siblings('.spinner');
+			var $message = $('#hoko-sync-message');
+			var $results = $('#hoko-sync-results');
+			
+			// Confirmar acción
+			if (!confirm('¿Estás seguro de que deseas sincronizar los estados y ciudades? Esto reemplazará los datos existentes.')) {
+				return;
+			}
+			
+			// Deshabilitar botón y mostrar spinner
+			$button.prop('disabled', true);
+			$spinner.addClass('is-active');
+			$message.hide();
+			$results.hide();
+			
+			// Realizar petición AJAX
+			$.ajax({
+				url: hokoAdmin.ajaxurl,
+				type: 'POST',
+				dataType: 'json',
+				data: {
+					action: 'hoko_sync_cities',
+					nonce: hokoAdmin.nonce
+				},
+				success: function(response) {
+					if (response.success) {
+						showSyncMessage('success', response.data.message);
+						showSyncResults(response.data.results);
+					} else {
+						showSyncMessage('error', response.data.message);
+					}
+				},
+				error: function(xhr, status, error) {
+					showSyncMessage('error', 'Error en la conexión: ' + error);
+				},
+				complete: function() {
+					// Rehabilitar botón y ocultar spinner
+					$button.prop('disabled', false);
+					$spinner.removeClass('is-active');
+				}
+			});
+		});
+		
+		/**
+		 * Muestra un mensaje en la página de sincronización
+		 */
+		function showSyncMessage(type, message) {
+			var $message = $('#hoko-sync-message');
+			var className = type === 'success' ? 'notice notice-success' : 'notice notice-error';
+			
+			$message
+				.removeClass('notice-success notice-error')
+				.addClass(className)
+				.html('<p>' + message + '</p>')
+				.slideDown();
+			
+			// Ocultar mensaje después de 5 segundos
+			setTimeout(function() {
+				$message.slideUp();
+			}, 5000);
+		}
+		
+		/**
+		 * Muestra los resultados de la sincronización
+		 */
+		function showSyncResults(results) {
+			var $results = $('#hoko-sync-results');
+			var $stats = $('#hoko-sync-stats');
+			var $details = $('#hoko-sync-details');
+			
+			// Mostrar estadísticas
+			$stats.html(
+				'<div class="sync-stat"><strong>Estados sincronizados:</strong> ' + results.states.synced + '</div>' +
+				'<div class="sync-stat"><strong>Ciudades sincronizadas:</strong> ' + results.cities.synced + '</div>' +
+				(results.states.errors > 0 ? '<div class="sync-stat" style="background: #fcf0f1;"><strong>Errores en estados:</strong> ' + results.states.errors + '</div>' : '') +
+				(results.cities.errors > 0 ? '<div class="sync-stat" style="background: #fcf0f1;"><strong>Errores en ciudades:</strong> ' + results.cities.errors + '</div>' : '')
+			);
+			
+			// Mostrar detalles
+			var detailsHtml = '<h4>Detalles de la sincronización</h4>';
+			detailsHtml += '<div class="sync-item">✓ Estados: ' + results.states.synced + ' sincronizados correctamente' + (results.states.errors > 0 ? ', ' + results.states.errors + ' con errores' : '') + '</div>';
+			detailsHtml += '<div class="sync-item">✓ Ciudades: ' + results.cities.synced + ' sincronizadas correctamente' + (results.cities.errors > 0 ? ', ' + results.cities.errors + ' con errores' : '') + '</div>';
+			detailsHtml += '<div class="sync-item">✓ Datos almacenados para uso en órdenes de compra</div>';
+			
+			$details.html(detailsHtml);
+			
+			// Mostrar sección de resultados
+			$results.slideDown();
+		}
+		
 		/**
 		 * Muestra un mensaje de respuesta para una orden específica
 		 */
