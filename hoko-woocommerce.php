@@ -32,8 +32,38 @@ function hoko_360_activate() {
 			esc_html__( 'Este plugin requiere WooCommerce. Por favor instala y activa WooCommerce primero.', 'hoko-360' ) 
 		);
 	}
+	
+	// Crear tabla para tracking de órdenes
+	hoko_360_create_orders_table();
 }
 register_activation_hook( __FILE__, 'hoko_360_activate' );
+
+/**
+ * Crea la tabla para tracking de órdenes sincronizadas.
+ */
+function hoko_360_create_orders_table() {
+	global $wpdb;
+	
+	$table_name      = $wpdb->prefix . 'hoko_orders';
+	$charset_collate = $wpdb->get_charset_collate();
+	
+	$sql = "CREATE TABLE IF NOT EXISTS $table_name (
+		id bigint(20) NOT NULL AUTO_INCREMENT,
+		order_id bigint(20) NOT NULL,
+		hoko_order_id varchar(100) DEFAULT NULL,
+		sync_status tinyint(1) NOT NULL DEFAULT 0 COMMENT '0=pending, 1=synced, 2=failed',
+		sync_message text DEFAULT NULL,
+		country varchar(20) DEFAULT NULL,
+		synced_at datetime DEFAULT NULL,
+		created_at datetime DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY  (id),
+		UNIQUE KEY order_id (order_id),
+		KEY sync_status (sync_status)
+	) $charset_collate;";
+	
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	dbDelta( $sql );
+}
 
 /**
  * Código que se ejecuta durante la desactivación del plugin.
@@ -65,5 +95,6 @@ function hoko_360_run() {
 	// Hooks para manejar peticiones AJAX
 	add_action( 'wp_ajax_hoko_authenticate', array( $plugin_admin, 'handle_auth_request' ) );
 	add_action( 'wp_ajax_hoko_logout', array( $plugin_admin, 'handle_logout_request' ) );
+	add_action( 'wp_ajax_hoko_create_order', array( $plugin_admin, 'handle_create_order_request' ) );
 }
 add_action( 'plugins_loaded', 'hoko_360_run' );
