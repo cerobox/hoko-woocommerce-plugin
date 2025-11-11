@@ -114,82 +114,83 @@
 			});
 		});
 		
-		// Manejo del botón de crear orden en Hoko (usando delegación de eventos)
-		$(document).on('click', '.hoko-create-order', function(e) {
+		// Manejo del formulario de confirmación de orden
+		$('#hoko-confirm-form').on('submit', function(e) {
 			e.preventDefault();
 			
-			var $button = $(this);
-			var $spinner = $button.siblings('.spinner');
-			var orderId = $button.data('order-id');
-			var $row = $button.closest('tr');
+			var $form = $(this);
+			var $submitButton = $('#hoko-confirm-submit');
+			var $spinner = $form.find('.spinner');
+			var $message = $('#hoko-confirm-message');
 			
-			console.log('Botón clickeado, Order ID:', orderId);
+			// Serializar datos del formulario
+			var formData = $form.serializeArray();
+			var postData = {
+				action: 'hoko_create_order',
+				nonce: hokoAdmin.nonce
+			};
 			
-			// Validar que tenemos el order ID
-			if (!orderId) {
-				alert('Error: No se pudo obtener el ID de la orden.');
-				return;
-			}
-			
-			// Confirmar acción
-			if (!confirm('¿Estás seguro de que deseas crear esta orden en Hoko?')) {
-				return;
-			}
+			// Convertir datos del formulario a objeto
+			$.each(formData, function(i, field) {
+				var name = field.name;
+				var value = field.value;
+				
+				// Manejar arrays anidados (customer, stocks, measures)
+				if (name.indexOf('[') !== -1) {
+					var parts = name.match(/([^\[]+)\[([^\]]+)\](?:\[([^\]]+)\])?/);
+					if (parts) {
+						var mainKey = parts[1];
+						var subKey = parts[2];
+						var subSubKey = parts[3];
+						
+						if (!postData[mainKey]) {
+							postData[mainKey] = {};
+						}
+						
+						if (subSubKey) {
+							// Caso: stocks[0][sku]
+							if (!postData[mainKey][subKey]) {
+								postData[mainKey][subKey] = {};
+							}
+							postData[mainKey][subKey][subSubKey] = value;
+						} else {
+							// Caso: customer[name]
+							postData[mainKey][subKey] = value;
+						}
+					}
+				} else {
+					postData[name] = value;
+				}
+			});
 			
 			// Deshabilitar botón y mostrar spinner
-			$button.prop('disabled', true);
+			$submitButton.prop('disabled', true);
 			$spinner.addClass('is-active');
+			$message.hide();
 			
 			// Realizar petición AJAX
 			$.ajax({
 				url: hokoAdmin.ajaxurl,
 				type: 'POST',
 				dataType: 'json',
-				data: {
-					action: 'hoko_create_order',
-					nonce: hokoAdmin.nonce,
-					order_id: orderId
-				},
+				data: postData,
 				success: function(response) {
 					if (response.success) {
-						// Actualizar estado en la tabla
-						var $statusCell = $row.find('.hoko-sync-status');
-						$statusCell
-							.removeClass('hoko-sync-pending hoko-sync-failed')
-							.addClass('hoko-sync-synced')
-							.text('Sincronizado');
-						
-						// Reemplazar botón con checkmark
-						$button.parent().html(
-							'<span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span> Sincronizado'
-						);
-						
-						// Mostrar mensaje de éxito
-						showOrderMessage($row, 'success', response.data.message);
+						showConfirmMessage('success', response.data.message);
+						// Redirigir a la página de órdenes después de 2 segundos
+						setTimeout(function() {
+							window.location.href = hokoAdmin.ordersUrl;
+						}, 2000);
 					} else {
-						// Actualizar estado a fallido
-						var $statusCell = $row.find('.hoko-sync-status');
-						$statusCell
-							.removeClass('hoko-sync-pending hoko-sync-synced')
-							.addClass('hoko-sync-failed')
-							.text('Fallido');
-						
-						// Agregar mensaje de error
-						if (!$row.find('.hoko-sync-message').length) {
-							$statusCell.after('<br><small class="hoko-sync-message">' + response.data.message + '</small>');
-						} else {
-							$row.find('.hoko-sync-message').text(response.data.message);
-						}
-						
-						showOrderMessage($row, 'error', response.data.message);
+						showConfirmMessage('error', response.data.message);
 					}
 				},
 				error: function(xhr, status, error) {
-					showOrderMessage($row, 'error', 'Error en la conexión: ' + error);
+					showConfirmMessage('error', 'Error en la conexión: ' + error);
 				},
 				complete: function() {
 					// Rehabilitar botón y ocultar spinner
-					$button.prop('disabled', false);
+					$submitButton.prop('disabled', false);
 					$spinner.removeClass('is-active');
 				}
 			});
@@ -233,6 +234,25 @@
 			setTimeout(function() {
 				$message.slideUp();
 			}, 5000);
+		}
+		
+		/**
+		 * Muestra un mensaje en la página de confirmación
+		 */
+		function showConfirmMessage(type, message) {
+			var $message = $('#hoko-confirm-message');
+			var className = type === 'success' ? 'notice notice-success' : 'notice notice-error';
+			
+			$message
+				.removeClass('notice-success notice-error')
+				.addClass(className)
+				.html('<p>' + message + '</p>')
+				.show();
+			
+			// Scroll hacia el mensaje
+			$('html, body').animate({
+				scrollTop: $message.offset().top - 100
+			}, 500);
 		}
 		
 	});

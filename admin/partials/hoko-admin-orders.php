@@ -96,14 +96,12 @@ if ( ! defined( 'WPINC' ) ) {
 									<td><?php echo esc_html( $order->get_date_created()->date_i18n( get_option( 'date_format' ) ) ); ?></td>
 									<td>
 										<?php if ( $sync_status !== 1 ) : ?>
-											<button 
-												type="button" 
-												class="button button-primary hoko-create-order" 
-												data-order-id="<?php echo esc_attr( $order->get_id() ); ?>"
+											<a 
+												href="<?php echo esc_url( admin_url( 'admin.php?page=hoko-360-order-confirm&order_id=' . $order->get_id() ) ); ?>" 
+												class="button button-primary"
 											>
 												<?php esc_html_e( 'Crear Orden', 'hoko-360' ); ?>
-											</button>
-											<span class="spinner"></span>
+											</a>
 										<?php else : ?>
 											<span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span>
 											<?php esc_html_e( 'Sincronizado', 'hoko-360' ); ?>
@@ -114,7 +112,6 @@ if ( ! defined( 'WPINC' ) ) {
 						</tbody>
 					</table>
 				<?php endif; ?>
-			</div>
 		</div>
 	<?php endif; ?>
 </div>

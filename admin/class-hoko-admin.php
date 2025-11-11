@@ -73,8 +73,9 @@ class Hoko_Admin {
 			$this->plugin_name,
 			'hokoAdmin',
 			array(
-				'ajaxurl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'hoko_auth_nonce' ),
+				'ajaxurl'   => admin_url( 'admin-ajax.php' ),
+				'nonce'     => wp_create_nonce( 'hoko_auth_nonce' ),
+				'ordersUrl' => admin_url( 'admin.php?page=hoko-360-orders' ),
 			)
 		);
 	}
@@ -115,6 +116,16 @@ class Hoko_Admin {
 			'manage_options',                        // Capacidad requerida
 			'hoko-360-orders',                       // Slug del submenú
 			array( $this, 'display_orders_page' )   // Función callback
+		);
+
+		// Submenú oculto: Confirmar orden
+		add_submenu_page(
+			null,                                    // Sin menú padre (oculto)
+			__( 'Confirmar Orden', 'hoko-360' ),    // Título de la página
+			__( 'Confirmar Orden', 'hoko-360' ),    // Título del submenú
+			'manage_options',                        // Capacidad requerida
+			'hoko-360-order-confirm',                // Slug del submenú
+			array( $this, 'display_order_confirm_page' ) // Función callback
 		);
 	}
 
@@ -162,6 +173,26 @@ class Hoko_Admin {
 		}
 		
 		require_once plugin_dir_path( __FILE__ ) . 'partials/hoko-admin-orders.php';
+	}
+
+	/**
+	 * Muestra la página de confirmación de orden.
+	 */
+	public function display_order_confirm_page() {
+		// Verificar si está autenticado
+		$token = get_option( 'hoko_360_auth_token', '' );
+		$is_authenticated = ! empty( $token );
+		
+		// Obtener ID de orden desde parámetros
+		$order_id = isset( $_GET['order_id'] ) ? absint( $_GET['order_id'] ) : 0;
+		
+		// Obtener orden de WooCommerce
+		$order = null;
+		if ( $order_id && $is_authenticated ) {
+			$order = wc_get_order( $order_id );
+		}
+		
+		require_once plugin_dir_path( __FILE__ ) . 'partials/hoko-admin-order-confirm.php';
 	}
 
 	/**
@@ -390,8 +421,8 @@ class Hoko_Admin {
 			wp_send_json_error( array( 'message' => __( 'Orden no encontrada.', 'hoko-360' ) ) );
 		}
 
-		// Preparar datos para Hoko
-		$hoko_data = $this->prepare_order_data( $order );
+		// Preparar datos para Hoko desde el formulario
+		$hoko_data = $this->prepare_order_data_from_form();
 
 		// Obtener país y endpoint
 		$country = get_option( 'hoko_360_auth_country', 'colombia' );
@@ -444,6 +475,67 @@ class Hoko_Admin {
 			
 			wp_send_json_error( array( 'message' => $error_message ) );
 		}
+	}
+
+	/**
+	 * Prepara los datos de la orden desde el formulario de confirmación.
+	 *
+	 * @return array Datos formateados para Hoko.
+	 */
+	private function prepare_order_data_from_form() {
+		// Datos del cliente
+		$customer = array(
+			'name'           => isset( $_POST['customer']['name'] ) ? sanitize_text_field( $_POST['customer']['name'] ) : '',
+			'email'          => isset( $_POST['customer']['email'] ) ? sanitize_email( $_POST['customer']['email'] ) : '',
+			'identification' => isset( $_POST['customer']['identification'] ) ? sanitize_text_field( $_POST['customer']['identification'] ) : '',
+			'phone'          => isset( $_POST['customer']['phone'] ) ? sanitize_text_field( $_POST['customer']['phone'] ) : '',
+			'address'        => isset( $_POST['customer']['address'] ) ? sanitize_text_field( $_POST['customer']['address'] ) : '',
+			'city_id'        => isset( $_POST['customer']['city_id'] ) ? sanitize_text_field( $_POST['customer']['city_id'] ) : '1',
+		);
+
+		// Productos (stocks)
+		$stocks = array();
+		if ( isset( $_POST['stocks'] ) && is_array( $_POST['stocks'] ) ) {
+			foreach ( $_POST['stocks'] as $stock_data ) {
+				$sku = isset( $stock_data['sku'] ) ? sanitize_text_field( $stock_data['sku'] ) : '';
+				if ( $sku ) {
+					$stocks[ $sku ] = array(
+						'amount' => isset( $stock_data['amount'] ) ? absint( $stock_data['amount'] ) : 1,
+						'price'  => isset( $stock_data['price'] ) ? floatval( $stock_data['price'] ) : 0,
+					);
+				}
+			}
+		}
+
+		// Método de pago
+		$payment = isset( $_POST['payment'] ) ? absint( $_POST['payment'] ) : 0;
+
+		// Courier ID
+		$courier_id = isset( $_POST['courier_id'] ) ? absint( $_POST['courier_id'] ) : 44;
+
+		// Contenido
+		$contain = isset( $_POST['contain'] ) ? sanitize_text_field( $_POST['contain'] ) : '';
+
+		// Medidas
+		$measures = array(
+			'height' => isset( $_POST['measures']['height'] ) ? sanitize_text_field( $_POST['measures']['height'] ) : '10',
+			'width'  => isset( $_POST['measures']['width'] ) ? sanitize_text_field( $_POST['measures']['width'] ) : '10',
+			'length' => isset( $_POST['measures']['length'] ) ? sanitize_text_field( $_POST['measures']['length'] ) : '10',
+			'weight' => isset( $_POST['measures']['weight'] ) ? sanitize_text_field( $_POST['measures']['weight'] ) : '1',
+		);
+
+		// ID externo
+		$external_id = isset( $_POST['external_id'] ) ? sanitize_text_field( $_POST['external_id'] ) : '';
+
+		return array(
+			'customer'    => $customer,
+			'stocks'      => $stocks,
+			'payment'     => $payment,
+			'courier_id'  => $courier_id,
+			'contain'     => $contain,
+			'measures'    => $measures,
+			'external_id' => $external_id,
+		);
 	}
 
 	/**
