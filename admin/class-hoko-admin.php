@@ -434,15 +434,21 @@ class Hoko_Admin {
 			$headers['Authorization'] = 'Bearer ' . $token;
 		}
 
-		return wp_remote_post(
+		// Para depuración: registrar headers completos
+		error_log( 'Hoko Debug - Headers: ' . print_r( $headers, true ) );
+		error_log( 'Hoko Debug - Request Data: ' . print_r( $data, true ) );
+
+		// Para endpoints GET como get-states y get-cities, usar GET en lugar de POST
+		$response = wp_remote_get(
 			$endpoint,
 			array(
-				'method'  => 'POST',
+				'method'  => 'GET',
 				'timeout' => 45,
 				'headers' => $headers,
-				'body'    => wp_json_encode( $data ),
 			)
 		);
+		
+		return $response;
 	}
 
 	/**
@@ -768,18 +774,30 @@ class Hoko_Admin {
 	 */
 	private function sync_states( $token, $country ) {
 		$api_url = $this->get_api_base_url( $country ) . '/member/get-states';
+		
+		// Para depuración: registrar la petición
+		error_log( 'Hoko Debug - Sync States URL: ' . $api_url );
+		error_log( 'Hoko Debug - Token: ' . substr( $token, 0, 10 ) . '...' );
+		
 		$response = $this->make_api_request( $api_url, array(), $token );
 
 		if ( is_wp_error( $response ) ) {
-			throw new Exception( __( 'Error al obtener estados: ', 'hoko-360' ) . $response->get_error_message() );
+			$error_msg = 'Error al obtener estados: ' . $response->get_error_message();
+			error_log( 'Hoko Debug - WP Error: ' . $error_msg );
+			throw new Exception( __( $error_msg, 'hoko-360' ) );
 		}
 
 		$response_code = wp_remote_retrieve_response_code( $response );
 		$response_body = wp_remote_retrieve_body( $response );
 		$data = json_decode( $response_body, true );
+		
+		// Para depuración: registrar la respuesta
+		error_log( 'Hoko Debug - Response Code: ' . $response_code );
+		error_log( 'Hoko Debug - Response Body: ' . $response_body );
 
 		if ( $response_code !== 200 ) {
 			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error al obtener estados', 'hoko-360' );
+			error_log( 'Hoko Debug - API Error: ' . $error_message );
 			throw new Exception( $error_message );
 		}
 
@@ -827,13 +845,14 @@ class Hoko_Admin {
 
 		if ( is_array( $states_data ) ) {
 			foreach ( $states_data as $state ) {
-				if ( isset( $state['id'] ) && isset( $state['name'] ) ) {
+				// La API usa 'cod' en lugar de 'id' y 'name' para el nombre
+				if ( isset( $state['cod'] ) && isset( $state['name'] ) ) {
 					$result = $wpdb->insert(
 						$table_name,
 						array(
-							'state_id' => sanitize_text_field( $state['id'] ),
+							'state_id' => sanitize_text_field( $state['cod'] ),
 							'state_name' => sanitize_text_field( $state['name'] ),
-							'state_code' => isset( $state['code'] ) ? sanitize_text_field( $state['code'] ) : '',
+							'state_code' => sanitize_text_field( $state['cod'] ), // Usar 'cod' como código también
 							'created_at' => current_time( 'mysql' )
 						),
 						array( '%d', '%s', '%s', '%s' )
@@ -871,13 +890,14 @@ class Hoko_Admin {
 
 		if ( is_array( $cities_data ) ) {
 			foreach ( $cities_data as $city ) {
-				if ( isset( $city['id'] ) && isset( $city['name'] ) && isset( $city['state_id'] ) ) {
+				// La API usa 'id', 'name' y 'department_id' (no 'state_id')
+				if ( isset( $city['id'] ) && isset( $city['name'] ) && isset( $city['department_id'] ) ) {
 					$result = $wpdb->insert(
 						$table_name,
 						array(
 							'city_id' => sanitize_text_field( $city['id'] ),
 							'city_name' => sanitize_text_field( $city['name'] ),
-							'state_id' => sanitize_text_field( $city['state_id'] ),
+							'state_id' => sanitize_text_field( $city['department_id'] ), // Mapear department_id a state_id
 							'created_at' => current_time( 'mysql' )
 						),
 						array( '%d', '%s', '%d', '%s' )
