@@ -265,6 +265,41 @@
 	background: #fafafa;
 }
 
+.hoko-last-sync {
+	margin-bottom: 20px;
+	padding: 15px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #f8f9f9;
+}
+
+.hoko-last-sync h3 {
+	margin-top: 0;
+	margin-bottom: 15px;
+	color: #1d2327;
+	font-size: 16px;
+	font-weight: 600;
+}
+
+.sync-summary {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 15px;
+}
+
+.sync-summary .sync-stat {
+	padding: 8px 12px;
+	background: #f0f0f1;
+	border-radius: 3px;
+	font-size: 13px;
+	flex: 1;
+	min-width: 150px;
+}
+
+.sync-summary .sync-stat strong {
+	color: #1d2327;
+}
+
 .hoko-sync-info {
 	margin-bottom: 20px;
 }

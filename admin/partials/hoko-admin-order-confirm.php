@@ -234,7 +234,7 @@ if ( ! defined( 'WPINC' ) ) {
 								<td>
 									<select id="payment" name="payment" class="regular-text">
 										<option value="0"><?php esc_html_e( 'Pago contra entrega', 'hoko-360' ); ?></option>
-										<option value="1"><?php esc_html_e( 'Pago crédito (Usando dinero wallet)', 'hoko-360' ); ?></option>
+										<option value="1"><?php esc_html_e( 'Pago crédito (Usar dinero wallet)', 'hoko-360' ); ?></option>
 									</select>
 								</td>
 							</tr>

@@ -10,6 +10,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Obtener última sincronización
+$last_sync = get_last_sync_info();
+
 ?>
 
 <div class="wrap hoko-admin">
@@ -28,6 +31,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div class="card">
 			<h2><?php _e( 'Sincronización de Ciudades', 'hoko-360' ); ?></h2>
 			<p><?php _e( 'Sincroniza los estados y ciudades desde Hoko 360 para usarlos en tus órdenes de compra.', 'hoko-360' ); ?></p>
+			
+			<?php if ( $last_sync ) : ?>
+				<div class="hoko-last-sync">
+					<h3><?php _e( 'Última sincronización', 'hoko-360' ); ?></h3>
+					<div class="sync-summary">
+						<div class="sync-stat">
+							<strong><?php _e( 'Fecha:', 'hoko-360' ); ?></strong> 
+							<?php echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $last_sync['date'] ) ) ); ?>
+						</div>
+						<div class="sync-stat">
+							<strong><?php _e( 'Estados:', 'hoko-360' ); ?></strong> 
+							<?php echo esc_html( $last_sync['states_count'] ); ?> <?php _e( 'sincronizados', 'hoko-360' ); ?>
+						</div>
+						<div class="sync-stat">
+							<strong><?php _e( 'Ciudades:', 'hoko-360' ); ?></strong> 
+							<?php echo esc_html( $last_sync['cities_count'] ); ?> <?php _e( 'sincronizadas', 'hoko-360' ); ?>
+						</div>
+						<?php if ( $last_sync['errors'] > 0 ) : ?>
+							<div class="sync-stat" style="background: #fcf0f1;">
+								<strong><?php _e( 'Errores:', 'hoko-360' ); ?></strong> 
+								<?php echo esc_html( $last_sync['errors'] ); ?>
+							</div>
+						<?php endif; ?>
+					</div>
+				</div>
+			<?php endif; ?>
 			
 			<div class="hoko-sync-section">
 				<div class="hoko-sync-info">
@@ -57,3 +86,36 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</div>
 	<?php endif; ?>
 </div>
+
+<?php
+/**
+ * Obtiene información de la última sincronización
+ */
+function get_last_sync_info() {
+	global $wpdb;
+	
+	$states_table = $wpdb->prefix . 'hoko_country_states';
+	$cities_table = $wpdb->prefix . 'hoko_country_cities';
+	
+	// Obtener conteo de estados y ciudades
+	$states_count = $wpdb->get_var( "SELECT COUNT(*) FROM $states_table" );
+	$cities_count = $wpdb->get_var( "SELECT COUNT(*) FROM $cities_table" );
+	
+	// Obtener fecha de última sincronización (más reciente de ambas tablas)
+	$last_state_date = $wpdb->get_var( "SELECT MAX(created_at) FROM $states_table" );
+	$last_city_date = $wpdb->get_var( "SELECT MAX(created_at) FROM $cities_table" );
+	
+	$last_sync_date = max( $last_state_date, $last_city_date );
+	
+	if ( ! $last_sync_date || $states_count == 0 ) {
+		return null;
+	}
+	
+	return array(
+		'date' => $last_sync_date,
+		'states_count' => intval( $states_count ),
+		'cities_count' => intval( $cities_count ),
+		'errors' => 0 // Podríamos calcular esto si guardamos logs de errores
+	);
+}
+?>
