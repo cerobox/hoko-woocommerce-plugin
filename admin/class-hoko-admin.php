@@ -965,6 +965,33 @@ class Hoko_Admin {
 	}
 
 	/**
+	 * Maneja la petición AJAX para obtener ciudades por estado.
+	 */
+	public function handle_get_cities_by_state_request() {
+		$this->verify_ajax_request();
+
+		// Obtener ID del estado
+		$state_id = isset( $_POST['state_id'] ) ? absint( $_POST['state_id'] ) : 0;
+		
+		if ( ! $state_id ) {
+			wp_send_json_error( array( 'message' => __( 'ID de estado no válido.', 'hoko-360' ) ) );
+		}
+
+		// Obtener ciudades de la base de datos
+		global $wpdb;
+		$cities_table = $wpdb->prefix . 'hoko_country_cities';
+		$cities = $wpdb->get_results( 
+			$wpdb->prepare( 
+				"SELECT city_id, city_name FROM $cities_table WHERE state_id = %d ORDER BY city_name ASC", 
+				$state_id 
+			), 
+			ARRAY_A 
+		);
+
+		wp_send_json_success( array( 'cities' => $cities ) );
+	}
+
+	/**
 	 * Maneja la petición AJAX para cerrar sesión.
 	 */
 	public function handle_logout_request() {

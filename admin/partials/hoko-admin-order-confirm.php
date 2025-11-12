@@ -181,14 +181,14 @@ if ( $current_city_id && $cities ) {
 										class="regular-text" 
 										required
 									>
-										<option value=""><?php esc_html_e( 'Seleccionar departamento...', 'hoko-360' ); ?></option>
+										<option value=""><?php esc_html_e( 'Seleccionar...', 'hoko-360' ); ?></option>
 										<?php foreach ( $states as $state ) : ?>
 											<option value="<?php echo esc_attr( $state['state_id'] ); ?>" <?php echo ( $current_state_id == $state['state_id'] ) ? 'selected' : ''; ?>>
 												<?php echo esc_html( $state['state_name'] ); ?>
 											</option>
 										<?php endforeach; ?>
 									</select>
-									<p class="description"><?php esc_html_e( 'Selecciona el departamento de entrega.', 'hoko-360' ); ?></p>
+									<p class="description"><?php esc_html_e( 'Departamento, Estado o Provincia de entrega.', 'hoko-360' ); ?></p>
 								</td>
 							</tr>
 							<tr>
@@ -210,7 +210,7 @@ if ( $current_city_id && $cities ) {
 										}
 										?>
 									</select>
-									<p class="description"><?php esc_html_e( 'Selecciona la ciudad de entrega.', 'hoko-360' ); ?></p>
+									<p class="description"><?php esc_html_e( 'Ciudad, Zona o Canton de entrega.', 'hoko-360' ); ?></p>
 								</td>
 							</tr>
 						</table>
