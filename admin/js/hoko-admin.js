@@ -291,6 +291,45 @@
 			$results.slideDown();
 		}
 		
+		// Manejo de selectores de estado y ciudad en el formulario de confirmación
+		$('#customer_state').on('change', function() {
+			var $stateSelect = $(this);
+			var $citySelect = $('#customer_city_id');
+			var stateId = $stateSelect.val();
+			
+			// Limpiar selector de ciudades
+			$citySelect.html('<option value="">Seleccionar ciudad...</option>');
+			
+			if (stateId) {
+				// Cargar ciudades para este estado
+				$.ajax({
+					url: hokoAdmin.ajaxurl,
+					type: 'POST',
+					dataType: 'json',
+					data: {
+						action: 'hoko_get_cities_by_state',
+						nonce: hokoAdmin.nonce,
+						state_id: stateId
+					},
+					success: function(response) {
+						if (response.success && response.data.cities) {
+							$.each(response.data.cities, function(index, city) {
+								$citySelect.append('<option value="' + city.city_id + '">' + city.city_name + '</option>');
+							});
+						}
+					},
+					error: function(xhr, status, error) {
+						console.error('Error loading cities:', error);
+					}
+				});
+			}
+		});
+		
+		// Cargar ciudades al cargar la página si hay un estado seleccionado
+		if ($('#customer_state').val()) {
+			$('#customer_state').trigger('change');
+		}
+		
 		/**
 		 * Muestra un mensaje de respuesta para una orden específica
 		 */

@@ -10,6 +10,33 @@
 if ( ! defined( 'WPINC' ) ) {
 	die;
 }
+
+// Obtener estados y ciudades para los selectores
+$states = get_hoko_states();
+$cities = get_hoko_cities();
+$states_cities_map = array();
+
+if ( $states && $cities ) {
+	foreach ( $cities as $city ) {
+		$state_id = $city['state_id'];
+		if ( ! isset( $states_cities_map[$state_id] ) ) {
+			$states_cities_map[$state_id] = array();
+		}
+		$states_cities_map[$state_id][] = $city;
+	}
+}
+
+// Obtener ciudad actual de la orden
+$current_city_id = $order->get_meta( '_hoko_city_id', true );
+$current_state_id = '';
+if ( $current_city_id && $cities ) {
+	foreach ( $cities as $city ) {
+		if ( $city['city_id'] == $current_city_id ) {
+			$current_state_id = $city['state_id'];
+			break;
+		}
+	}
+}
 ?>
 
 <div class="wrap">
@@ -146,17 +173,44 @@ if ( ! defined( 'WPINC' ) ) {
 								</td>
 							</tr>
 							<tr>
-								<th scope="row"><label for="customer_city_id"><?php esc_html_e( 'ID de Ciudad', 'hoko-360' ); ?> <span class="required">*</span></label></th>
+								<th scope="row"><label for="customer_state"><?php esc_html_e( 'Departamento', 'hoko-360' ); ?> <span class="required">*</span></label></th>
 								<td>
-									<input 
-										type="text" 
-										id="customer_city_id" 
-										name="customer[city_id]" 
-										class="small-text" 
-										value="1"
+									<select 
+										id="customer_state" 
+										name="customer[state_id]" 
+										class="regular-text" 
 										required
 									>
-									<p class="description"><?php esc_html_e( 'ID de la ciudad en Hoko (por defecto: 1).', 'hoko-360' ); ?></p>
+										<option value=""><?php esc_html_e( 'Seleccionar departamento...', 'hoko-360' ); ?></option>
+										<?php foreach ( $states as $state ) : ?>
+											<option value="<?php echo esc_attr( $state['state_id'] ); ?>" <?php echo ( $current_state_id == $state['state_id'] ) ? 'selected' : ''; ?>>
+												<?php echo esc_html( $state['state_name'] ); ?>
+											</option>
+										<?php endforeach; ?>
+									</select>
+									<p class="description"><?php esc_html_e( 'Selecciona el departamento de entrega.', 'hoko-360' ); ?></p>
+								</td>
+							</tr>
+							<tr>
+								<th scope="row"><label for="customer_city_id"><?php esc_html_e( 'Ciudad', 'hoko-360' ); ?> <span class="required">*</span></label></th>
+								<td>
+									<select 
+										id="customer_city_id" 
+										name="customer[city_id]" 
+										class="regular-text" 
+										required
+									>
+										<option value=""><?php esc_html_e( 'Seleccionar ciudad...', 'hoko-360' ); ?></option>
+										<?php 
+										if ( $current_state_id && isset( $states_cities_map[$current_state_id] ) ) {
+											foreach ( $states_cities_map[$current_state_id] as $city ) {
+												$selected = ( $current_city_id == $city['city_id'] ) ? 'selected' : '';
+												echo '<option value="' . esc_attr( $city['city_id'] ) . '" ' . $selected . '>' . esc_html( $city['city_name'] ) . '</option>';
+											}
+										}
+										?>
+									</select>
+									<p class="description"><?php esc_html_e( 'Selecciona la ciudad de entrega.', 'hoko-360' ); ?></p>
 								</td>
 							</tr>
 						</table>
@@ -382,3 +436,29 @@ if ( ! defined( 'WPINC' ) ) {
 		</div>
 	<?php endif; ?>
 </div>
+
+<?php
+/**
+ * Obtiene todos los estados de la base de datos
+ */
+function get_hoko_states() {
+	global $wpdb;
+	
+	$states_table = $wpdb->prefix . 'hoko_country_states';
+	$states = $wpdb->get_results( "SELECT state_id, state_name FROM $states_table ORDER BY state_name ASC", ARRAY_A );
+	
+	return $states;
+}
+
+/**
+ * Obtiene todas las ciudades de la base de datos
+ */
+function get_hoko_cities() {
+	global $wpdb;
+	
+	$cities_table = $wpdb->prefix . 'hoko_country_cities';
+	$cities = $wpdb->get_results( "SELECT city_id, city_name, state_id FROM $cities_table ORDER BY city_name ASC", ARRAY_A );
+	
+	return $cities;
+}
+?>

@@ -1,29 +1,6 @@
 /**
  * Estilos para el área de administración de Hoko 360
  */
-
-/* Separador visual en el menú de administración */
-#adminmenu .wp-submenu .wp-submenu-head {
-	border-bottom: 1px solid #dcdcde;
-	margin-bottom: 8px;
-	padding-bottom: 8px;
-}
-
-#adminmenu .wp-submenu li:nth-child(2) {
-	position: relative;
-}
-
-#adminmenu .wp-submenu li:nth-child(2)::after {
-	content: '';
-	position: absolute;
-	bottom: -8px;
-	left: 12px;
-	right: 12px;
-	height: 1px;
-	background: #dcdcde;
-	opacity: 0.7;
-}
-
 .hoko-auth-container {
 	max-width: 800px;
 	margin: 20px 0;
