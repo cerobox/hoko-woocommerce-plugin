@@ -34,7 +34,7 @@ if ( ! defined( 'WPINC' ) ) {
 		<div class="hoko-orders-container">
 			<div class="hoko-orders-card">
 				<h2><?php esc_html_e( 'Gestión de Órdenes de Compra', 'hoko-360' ); ?></h2>
-				<p><?php esc_html_e( 'Sincroniza las órdenes de WooCommerce con Hoko 360.', 'hoko-360' ); ?></p>
+				<p><?php esc_html_e( 'Sincroniza las órdenes de WooCommerce con Hoko.', 'hoko-360' ); ?></p>
 				
 				<?php if ( empty( $orders ) ) : ?>
 					<div class="notice notice-info inline">

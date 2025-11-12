@@ -30,7 +30,7 @@ $last_sync = get_last_sync_info();
 	<?php else : ?>
 		<div class="card">
 			<h2><?php _e( 'Sincronización de Ciudades', 'hoko-360' ); ?></h2>
-			<p><?php _e( 'Sincroniza los estados y ciudades desde Hoko 360 para usarlos en tus órdenes de compra.', 'hoko-360' ); ?></p>
+			<p><?php _e( 'Sincroniza los estados y ciudades desde Hoko para usarlos en tus órdenes de compra.', 'hoko-360' ); ?></p>
 			
 			<?php if ( $last_sync ) : ?>
 				<div class="hoko-last-sync">

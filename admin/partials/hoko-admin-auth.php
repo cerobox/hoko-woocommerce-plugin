@@ -54,7 +54,7 @@ if ( ! defined( 'WPINC' ) ) {
 					</p>
 				</div>
 				
-				<p><?php esc_html_e( 'Ya tienes una sesión activa con Hoko 360.', 'hoko-360' ); ?></p>
+				<p><?php esc_html_e( 'Ya tienes una sesión activa con Hoko.', 'hoko-360' ); ?></p>
 				
 				<p class="submit">
 					<button type="button" class="button button-secondary" id="hoko-logout-button">
@@ -65,7 +65,7 @@ if ( ! defined( 'WPINC' ) ) {
 				
 			<?php else : ?>
 				<!-- Formulario de login -->
-				<p><?php esc_html_e( 'Ingresa tus credenciales para conectar con Hoko 360.', 'hoko-360' ); ?></p>
+				<p><?php esc_html_e( 'Ingresa tus credenciales para conectar con Hoko.', 'hoko-360' ); ?></p>
 				
 				<form id="hoko-auth-form" method="post">
 				<table class="form-table" role="presentation">

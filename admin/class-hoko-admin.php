@@ -124,8 +124,8 @@ class Hoko_Admin {
 
 		// Menú principal (apunta a Órdenes de compra)
 		add_menu_page(
-			__( 'Hoko 360', 'hoko-360' ),           // Título de la página
-			__( 'Hoko 360', 'hoko-360' ),           // Título del menú
+			__( 'Hoko', 'hoko-360' ),           // Título de la página
+			__( 'Hoko', 'hoko-360' ),           // Título del menú
 			'manage_options',                        // Capacidad requerida
 			'hoko-360-orders',                       // Slug del menú (apunta a órdenes)
 			array( $this, 'display_orders_page' ),  // Función callback
