@@ -512,7 +512,7 @@ class Hoko_Admin {
 		// Preparar datos y realizar petición
 		$hoko_data = $this->prepare_order_data_from_form();
 		$auth_data = $this->get_auth_data();
-		$api_url = $this->get_api_base_url( $auth_data['country'] ) . '/member/order/createV2';
+		$api_url = $this->get_api_base_url( $auth_data['country'] ) . '/member/order/create';
 
 		$response = $this->make_api_request( $api_url, $hoko_data, $auth_data['token'] );
 
