@@ -47,8 +47,7 @@ if ( ! defined( 'WPINC' ) ) {
 								<th><?php esc_html_e( 'Orden', 'hoko-360' ); ?></th>
 								<th><?php esc_html_e( 'Cliente', 'hoko-360' ); ?></th>
 								<th><?php esc_html_e( 'Total', 'hoko-360' ); ?></th>
-								<th><?php esc_html_e( 'Estado WC', 'hoko-360' ); ?></th>
-								<th><?php esc_html_e( 'Estado Sync', 'hoko-360' ); ?></th>
+								<th><?php esc_html_e( 'Estado', 'hoko-360' ); ?></th>
 								<th><?php esc_html_e( 'Fecha', 'hoko-360' ); ?></th>
 								<th><?php esc_html_e( 'Acciones', 'hoko-360' ); ?></th>
 							</tr>
@@ -84,7 +83,6 @@ if ( ! defined( 'WPINC' ) ) {
 										<br><small><?php echo esc_html( $order->get_billing_email() ); ?></small>
 									</td>
 									<td><?php echo wp_kses_post( $order->get_formatted_order_total() ); ?></td>
-									<td><?php echo esc_html( wc_get_order_status_name( $order->get_status() ) ); ?></td>
 									<td>
 										<span class="hoko-sync-status hoko-sync-<?php echo esc_attr( $status_class ); ?>">
 											<?php echo esc_html( $status_text ); ?>
