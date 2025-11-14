@@ -6,12 +6,10 @@
  * @subpackage Hoko360/admin/partials
  */
 
-// Si este archivo es llamado directamente, abortar.
 if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-// Obtener estados y ciudades para los selectores
 $states = get_hoko_states();
 $cities = get_hoko_cities();
 $states_cities_map = array();
@@ -26,7 +24,6 @@ if ( $states && $cities ) {
 	}
 }
 
-// Obtener ciudad actual de la orden
 $current_city_id = $order->get_meta( '_hoko_city_id', true );
 $current_state_id = '';
 if ( $current_city_id && $cities ) {
@@ -286,23 +283,23 @@ if ( $current_city_id && $cities ) {
 
 					<!-- Medidas del paquete -->
 					<div class="hoko-confirm-section">
-						<h3>Medidas del paquete</h3>
+						<h3><?php esc_html_e( 'Medidas del paquete', 'hoko-360' ); ?></h3>
 						<ul class="measures">
                             <li>
                                 <input type="number" id="measures_height" name="measures[height]" value="10" min="1" required>
-                                <label for="measures_height">Alto (CM)</label>
+                                <label for="measures_height"><?php esc_html_e( 'Alto (CM)', 'hoko-360' ); ?></label>
                             </li>
                             <li>
                                 <input type="number" id="measures_width" name="measures[width]" value="10" min="1" required>
-                                <label for="measures_width">Ancho (CM)</label>
+                                <label for="measures_width"><?php esc_html_e( 'Ancho (CM)', 'hoko-360' ); ?></label>
                             </li>
                             <li>
                                 <input type="number" id="measures_length" name="measures[length]" value="10" min="1" required>
-                                <label for="measures_length">Largo (CM)</label>
+                                <label for="measures_length"><?php esc_html_e( 'Largo (CM)', 'hoko-360' ); ?></label>
                             </li>
                             <li>
                                 <input type="number" id="measures_weight" name="measures[weight]" value="1" step="0.1" min="0.1" required>
-                                <label for="measures_weight">Peso (KG)</label>
+                                <label for="measures_weight"><?php esc_html_e( 'Peso (KG)', 'hoko-360' ); ?></label>
                             </li>
 						</ul>
 					</div>
@@ -377,9 +374,6 @@ if ( $current_city_id && $cities ) {
 </div>
 
 <?php
-/**
- * Obtiene todos los estados de la base de datos
- */
 function get_hoko_states() {
 	global $wpdb;
 	
@@ -389,9 +383,6 @@ function get_hoko_states() {
 	return $states;
 }
 
-/**
- * Obtiene todas las ciudades de la base de datos
- */
 function get_hoko_cities() {
 	global $wpdb;
 	

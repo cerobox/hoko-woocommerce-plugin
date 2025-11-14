@@ -5,12 +5,10 @@
 	 * Valida el formato del objeto customer según la especificación
 	 */
 	function validateCustomerFormat(customer) {
-		// Verificar que el objeto no sea nulo o undefined
 		if (!customer) {
 			return 'Los datos del cliente son inválidos.';
 		}
 		
-		// Validar name (requerido)
 		if (!customer.name || customer.name.trim() === '') {
 			return 'El nombre del cliente es requerido.';
 		}
@@ -18,7 +16,6 @@
 			return 'El nombre del cliente no puede exceder 100 caracteres.';
 		}
 		
-		// Validar email (requerido y formato válido)
 		if (!customer.email || customer.email.trim() === '') {
 			return 'El email del cliente es requerido.';
 		}
@@ -30,7 +27,6 @@
 			return 'El email no puede exceder 100 caracteres.';
 		}
 		
-		// Validar identification (requerido)
 		if (!customer.identification || customer.identification.trim() === '') {
 			return 'La identificación del cliente es requerida.';
 		}
@@ -38,11 +34,9 @@
 			return 'La identificación no puede exceder 20 caracteres.';
 		}
 		
-		// Validar phone (requerido)
 		if (!customer.phone || customer.phone.trim() === '') {
 			return 'El teléfono del cliente es requerido.';
 		}
-		// Permitir dígitos, espacios, +, -, () y caracteres comunes en teléfonos
 		var phoneRegex = /^[0-9\s\-\+\(\)]+$/;
 		if (!phoneRegex.test(customer.phone)) {
 			return 'El formato del teléfono no es válido. Solo se permiten dígitos y caracteres especiales comunes (+, -, (), espacios).';
@@ -51,7 +45,6 @@
 			return 'El teléfono no puede exceder 20 caracteres.';
 		}
 		
-		// Validar address (requerido)
 		if (!customer.address || customer.address.trim() === '') {
 			return 'La dirección del cliente es requerida.';
 		}
@@ -59,7 +52,6 @@
 			return 'La dirección no puede exceder 200 caracteres.';
 		}
 		
-		// Validar city_id (requerido y numérico)
 		if (!customer.city_id || customer.city_id.trim() === '') {
 			return 'La ciudad del cliente es requerida.';
 		}
@@ -67,7 +59,6 @@
 			return 'El ID de la ciudad debe ser un valor numérico.';
 		}
 		
-		// Si todas las validaciones pasan, retornar null (sin error)
 		return null;
 	}
 
@@ -394,10 +385,6 @@
 			var formattedCustomer = formatCustomerForAPI(customerData);
 			var customerJSON = JSON.stringify(formattedCustomer);
 			
-			// Mostrar el formato del customer en consola para validación
-			console.log('Customer data validated:', JSON.stringify(customerData, null, 2));
-			console.log('Formatted customer JSON:', customerJSON);
-			
 			// Construir measures como JSON string
 			var measuresData = {
 				height: $('#measures_height').val() || '10',
@@ -462,12 +449,6 @@
 			});
 			
 			var postDataString = formDataParts.join('&');
-			
-			// Log para verificar datos a enviar
-			console.log('POST data string:', postDataString);
-			console.log('Customer JSON:', customerJSON);
-			console.log('Measures JSON:', measuresJSON);
-			console.log('Stocks JSON:', stocksJSON);
 			
 			// Deshabilitar botón y mostrar spinner
 			$submitButton.prop('disabled', true);
