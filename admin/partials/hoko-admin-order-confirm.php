@@ -172,6 +172,25 @@ if ( $current_city_id && $cities ) {
 									>
 								</td>
 							</tr>
+                            <tr>
+                                <th colspan="2">
+                                    <strong>La ciudad y departamento del cliente son:</strong>
+                                    <?php
+                                    $billing_city = $order->get_billing_city();
+                                    $billing_state = $order->get_billing_state();
+                                    
+                                    if ( $billing_city && $billing_state ) {
+                                        echo esc_html( $billing_city ) . ', ' . esc_html( $billing_state );
+                                    } elseif ( $billing_city ) {
+                                        echo esc_html( $billing_city );
+                                    } elseif ( $billing_state ) {
+                                        echo esc_html( $billing_state );
+                                    } else {
+                                        echo 'No especificados';
+                                    }
+                                    ?>
+                                </th>
+                            </tr>
 							<tr>
 								<th scope="row"><label for="customer_state"><?php esc_html_e( 'Departamento', 'hoko-360' ); ?> <span class="required">*</span></label></th>
 								<td>

@@ -176,17 +176,16 @@ class Hoko_Admin {
 	}
 
 	/**
-	 * Obtiene el icono del menú (SVG codificado en base64).
+	 * Obtiene el icono del menú como URL.
 	 *
 	 * @return string URL del icono o dashicon.
 	 */
 	private function get_menu_icon() {
-		$icon_path = plugin_dir_path( __FILE__ ) . 'images/hoko-icon.svg';
+		$icon_path = plugin_dir_path( __FILE__ ) . 'images/hoko-icon.png';
 		
 		if ( file_exists( $icon_path ) ) {
-			$icon_svg = file_get_contents( $icon_path );
-			// Codificar SVG en base64 para usarlo como data URI
-			return 'data:image/svg+xml;base64,' . base64_encode( $icon_svg );
+			// Usar URL del archivo en lugar de base64
+			return plugin_dir_url( __FILE__ ) . 'images/hoko-icon.png';
 		}
 		
 		// Fallback a dashicon si no existe el archivo
