@@ -1,0 +1,457 @@
+/**
+ * Estilos para el área de administración de Hoko 360
+ */
+
+// Variables de colores
+$color-white: #fff;
+$color-border: #ccd0d4;
+$color-border-light: #e5e5e5;
+$color-border-gray: #dcdcde;
+$color-shadow: rgba(0, 0, 0, 0.04);
+$color-text-muted: #646970;
+$color-text-primary: #1d2327;
+$color-error: #d63638;
+$color-error-bg: #fadbd8;
+$color-error-dark: #c0392b;
+$color-success: #1e8449;
+$color-success-bg: #d5f5e3;
+$color-primary: #0073aa;
+$color-primary-light: #f0f6fc;
+$color-primary-gradient: #e6f3ff;
+$color-gray-bg: #f0f0f1;
+$color-gray-secondary: #fafafa;
+$color-gray-tertiary: #f8f9f9;
+
+// Mixins comunes
+@mixin card-base {
+	background: $color-white;
+	border: 1px solid $color-border;
+	box-shadow: 0 1px 1px $color-shadow;
+	padding: 20px;
+	margin-top: 20px;
+}
+
+@mixin card-header {
+	margin-top: 0;
+	padding-bottom: 10px;
+	border-bottom: 1px solid $color-border-light;
+}
+
+@mixin spinner-base {
+	float: none;
+	margin: 0 10px;
+	visibility: hidden;
+
+	&.is-active {
+		visibility: visible;
+	}
+}
+
+@mixin button-disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+// Contenedor principal de autenticación
+.hoko-auth-container {
+	max-width: 800px;
+	margin: 20px 0;
+}
+
+.hoko-auth-card {
+	@include card-base;
+
+	h2 {
+		@include card-header;
+	}
+
+	p {
+		color: $color-text-muted;
+		margin-bottom: 20px;
+	}
+
+	.required {
+		color: $color-error;
+	}
+
+	.spinner {
+		@include spinner-base;
+	}
+}
+
+#hoko-auth-message {
+	margin-top: 20px;
+
+	&.notice {
+		padding: 12px;
+		margin: 20px 0 0 0;
+	}
+}
+
+// Estilos para la página de órdenes
+.hoko-orders-container {
+	max-width: 1200px;
+	margin: 20px 0;
+}
+
+.hoko-orders-card {
+	@include card-base;
+
+	h2 {
+		@include card-header;
+	}
+
+	p {
+		color: $color-text-muted;
+		margin-bottom: 20px;
+	}
+
+	.notice.inline {
+		margin: 20px 0;
+	}
+
+	table {
+		margin-top: 20px;
+
+		td {
+			vertical-align: middle;
+		}
+
+		small {
+			color: $color-text-muted;
+			font-size: 12px;
+		}
+
+		.spinner {
+			@include spinner-base;
+			margin: 0;
+		}
+	}
+}
+
+// Estados de sincronización
+.hoko-sync-status {
+	display: inline-block;
+	padding: 4px 10px;
+	border-radius: 3px;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.hoko-sync-pending {
+	background: $color-gray-bg;
+	color: $color-text-muted;
+}
+
+.hoko-sync-synced {
+	background: $color-success-bg;
+	color: $color-success;
+}
+
+.hoko-sync-failed {
+	background: $color-error-bg;
+	color: $color-error-dark;
+}
+
+.hoko-sync-message {
+	display: block;
+	margin-top: 4px;
+	color: $color-error-dark;
+	font-style: italic;
+}
+
+.hoko-create-order {
+	margin-right: 5px;
+}
+
+// Estilos para la página de confirmación de orden
+.hoko-confirm-container {
+	max-width: 1000px;
+	margin: 20px 0;
+}
+
+.hoko-confirm-card {
+	@include card-base;
+
+	h2 {
+		@include card-header;
+	}
+
+	.required {
+		color: $color-error;
+	}
+
+	.spinner {
+		@include spinner-base;
+	}
+}
+
+.hoko-confirm-section {
+	margin-bottom: 30px;
+	padding-bottom: 20px;
+	border-bottom: 1px solid $color-gray-bg;
+
+	&:last-of-type {
+		border-bottom: none;
+	}
+}
+
+.hoko-confirm-card {
+	.form-table {
+		th {
+			width: 200px;
+			padding: 0;
+			vertical-align: middle;
+		}
+
+		td {
+			padding: 5px;
+		}
+	}
+
+	input[type="text"],
+	input[type="email"],
+	input[type="number"],
+	select {
+		padding: 6px 8px;
+	}
+
+	.description {
+		margin-top: 5px;
+		margin-bottom: 0;
+		color: $color-text-muted;
+		font-size: 13px;
+	}
+
+	.wp-list-table {
+		margin-top: 10px;
+
+		td {
+			vertical-align: middle;
+		}
+
+		input[type="number"] {
+			width: 80px;
+		}
+	}
+
+	.measures {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		gap: 15px;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+
+		li {
+			display: flex;
+			flex-direction: column;
+			gap: 5px;
+		}
+	}
+
+	.submit {
+		margin-top: 20px;
+		padding-top: 20px;
+		border-top: 1px solid $color-border-light;
+	}
+}
+
+#hoko-confirm-message {
+	margin-top: 20px;
+
+	&.notice {
+		padding: 12px;
+		margin: 20px 0;
+	}
+}
+
+// Estilos para cotización de envío
+.quotation {
+	margin: 20px 0;
+	padding: 20px;
+	border: 1px solid $color-border-light;
+	border-radius: 4px;
+	background: $color-gray-secondary;
+}
+
+#hoko-quote-shipping {
+	margin-bottom: 15px;
+
+	&:disabled {
+		@include button-disabled;
+	}
+}
+
+#hoko-quotation-results {
+	h4 {
+		margin: 0 0 15px 0;
+		color: $color-text-primary;
+		font-size: 14px;
+		font-weight: 600;
+	}
+}
+
+.quotation-options {
+	// Grid de tarjetas de transportadoras
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 10px;
+
+	.quotation-option {
+		label {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 14px;
+			background: $color-white;
+			border: 1px solid $color-border-gray;
+			border-radius: 8px;
+			box-shadow: 0 1px 1px $color-shadow;
+			cursor: pointer;
+			transition: border-color .2s ease, box-shadow .2s ease, transform .05s ease;
+
+			input[type="radio"] {
+				display: none;
+			}
+
+			img {
+				max-height: 50px;
+				width: auto;
+				object-fit: contain;
+			}
+
+			strong {
+				display: none; // no mostrar nombre en la tarjeta (solo logo y precio)
+			}
+
+			span {
+				color: $color-text-primary;
+				font-weight: 600;
+				font-size: 14px;
+			}
+		}
+
+		&.selected label {
+			border-color: $color-primary;
+			box-shadow: 0 0 0 2px $color-primary-light inset, 0 1px 1px $color-shadow;
+		}
+
+		label:hover {
+			border-color: $color-border;
+			box-shadow: 0 2px 4px $color-shadow;
+		}
+	}
+}
+
+// Estilos para la página de sincronización de ciudades
+.hoko-sync-section {
+	margin-top: 20px;
+	padding: 20px;
+	border: 1px solid $color-border-light;
+	border-radius: 4px;
+	background: $color-gray-secondary;
+}
+
+.hoko-last-sync {
+	margin-bottom: 20px;
+	padding: 15px;
+	border: 1px solid $color-border-gray;
+	border-radius: 4px;
+	background: $color-gray-tertiary;
+
+	h3 {
+		margin-top: 0;
+		margin-bottom: 15px;
+		color: $color-text-primary;
+		font-size: 16px;
+		font-weight: 600;
+	}
+}
+
+.sync-summary {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 15px;
+
+	.sync-stat {
+		padding: 8px 12px;
+		background: $color-gray-bg;
+		border-radius: 3px;
+		font-size: 13px;
+		flex: 1;
+		min-width: 150px;
+
+		strong {
+			color: $color-text-primary;
+		}
+	}
+}
+
+.hoko-sync-info {
+	margin-bottom: 20px;
+
+	ul {
+		margin: 10px 0 0 20px;
+	}
+
+	li {
+		margin-bottom: 5px;
+		color: $color-text-muted;
+	}
+}
+
+.hoko-sync-actions {
+	margin-bottom: 20px;
+
+	.button {
+		margin-right: 10px;
+	}
+
+	.spinner {
+		float: none;
+		margin: 0 0 0 10px;
+		vertical-align: middle;
+	}
+}
+
+#hoko-sync-results {
+	margin-top: 20px;
+	padding: 15px;
+	border: 1px solid $color-border-gray;
+	border-radius: 4px;
+	background: $color-white;
+}
+
+#hoko-sync-stats {
+	margin-bottom: 15px;
+
+	.sync-stat {
+		display: inline-block;
+		margin-right: 20px;
+		padding: 8px 12px;
+		background: $color-gray-bg;
+		border-radius: 3px;
+		font-size: 13px;
+
+		strong {
+			color: $color-text-primary;
+		}
+	}
+}
+
+#hoko-sync-details {
+	font-size: 13px;
+	color: $color-text-muted;
+
+	.sync-item {
+		margin-bottom: 8px;
+		padding: 5px 0;
+		border-bottom: 1px solid $color-gray-bg;
+
+		&:last-child {
+			border-bottom: none;
+		}
+	}
+}
