@@ -165,21 +165,14 @@
 	border-bottom: none;
 }
 
-.hoko-confirm-section h3 {
-	margin-top: 0;
-	margin-bottom: 15px;
-	color: #1d2327;
-	font-size: 16px;
-	font-weight: 600;
-}
-
 .hoko-confirm-card .form-table th {
 	width: 200px;
-	padding: 15px 10px 15px 0;
+	padding: 0;
+	vertical-align: middle;
 }
 
 .hoko-confirm-card .form-table td {
-	padding: 15px 10px;
+	padding: 5px;
 }
 
 .hoko-confirm-card .required {
@@ -204,8 +197,27 @@
 	margin-top: 10px;
 }
 
+.hoko-confirm-card .wp-list-table td {
+	vertical-align: middle;
+}
+
 .hoko-confirm-card .wp-list-table input[type="number"] {
 	width: 80px;
+}
+
+.hoko-confirm-card .measures {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 15px;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.hoko-confirm-card .measures li {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
 }
 
 .hoko-confirm-card .submit {

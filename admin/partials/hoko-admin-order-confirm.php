@@ -73,20 +73,12 @@ if ( $current_city_id && $cities ) {
 		<!-- Formulario de confirmación -->
 		<div class="hoko-confirm-container">
 			<div class="hoko-confirm-card">
-				<h2><?php esc_html_e( 'Detalles de la Orden', 'hoko-360' ); ?></h2>
+				<h2><?php esc_html_e( 'Detalles de la Orden', 'hoko-360' ); ?> #<?php echo esc_html( $order->get_order_number() ); ?></h2>
 				
 				<form id="hoko-confirm-form" method="post">
 					<!-- Información de la orden -->
 					<div class="hoko-confirm-section">
-						<h3><?php esc_html_e( 'Información General', 'hoko-360' ); ?></h3>
 						<table class="form-table">
-							<tr>
-								<th scope="row"><?php esc_html_e( 'Número de Orden', 'hoko-360' ); ?></th>
-								<td>
-									<strong>#<?php echo esc_html( $order->get_order_number() ); ?></strong>
-									<input type="hidden" name="order_id" value="<?php echo esc_attr( $order->get_id() ); ?>">
-								</td>
-							</tr>
 							<tr>
 								<th scope="row"><?php esc_html_e( 'Fecha', 'hoko-360' ); ?></th>
 								<td><?php echo esc_html( $order->get_date_created()->date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ) ); ?></td>
@@ -104,7 +96,23 @@ if ( $current_city_id && $cities ) {
 
 					<!-- Información del cliente -->
 					<div class="hoko-confirm-section">
-						<h3><?php esc_html_e( 'Información del Cliente', 'hoko-360' ); ?></h3>
+						<h3>
+                            <?php esc_html_e( 'Información del Cliente', 'hoko-360' ); ?>
+                            - <?php
+                            $billing_city = $order->get_billing_city();
+                            $billing_state = $order->get_billing_state();
+
+                            if ( $billing_city && $billing_state ) {
+                                echo esc_html( $billing_city ) . ', ' . esc_html( $billing_state );
+                            } elseif ( $billing_city ) {
+                                echo esc_html( $billing_city );
+                            } elseif ( $billing_state ) {
+                                echo esc_html( $billing_state );
+                            } else {
+                                echo 'No especificados';
+                            }
+                            ?>
+                        </h3>
 						<table class="form-table">
 							<tr>
 								<th scope="row"><label for="customer_name"><?php esc_html_e( 'Nombre', 'hoko-360' ); ?> <span class="required">*</span></label></th>
@@ -113,14 +121,27 @@ if ( $current_city_id && $cities ) {
 										type="text" 
 										id="customer_name" 
 										name="customer[name]" 
-										class="regular-text" 
+										class="regular-text"
 										value="<?php echo esc_attr( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ); ?>"
 										required
 									>
 								</td>
 							</tr>
+                            <tr>
+                                <th scope="row"><label for="customer_phone"><?php esc_html_e( 'Teléfono', 'hoko-360' ); ?> <span class="required">*</span></label></th>
+                                <td>
+                                    <input
+                                            type="text"
+                                            id="customer_phone"
+                                            name="customer[phone]"
+                                            class="regular-text"
+                                            value="<?php echo esc_attr( $order->get_billing_phone() ); ?>"
+                                            required
+                                    >
+                                </td>
+                            </tr>
 							<tr>
-								<th scope="row"><label for="customer_email"><?php esc_html_e( 'Email', 'hoko-360' ); ?> <span class="required">*</span></label></th>
+								<th scope="row"><label for="customer_email"><?php esc_html_e( 'Email', 'hoko-360' ); ?></label></th>
 								<td>
 									<input 
 										type="email" 
@@ -133,7 +154,7 @@ if ( $current_city_id && $cities ) {
 								</td>
 							</tr>
 							<tr>
-								<th scope="row"><label for="customer_identification"><?php esc_html_e( 'Identificación', 'hoko-360' ); ?> <span class="required">*</span></label></th>
+								<th scope="row"><label for="customer_identification"><?php esc_html_e( 'Identificación', 'hoko-360' ); ?></label></th>
 								<td>
 									<input 
 										type="text" 
@@ -143,54 +164,8 @@ if ( $current_city_id && $cities ) {
 										value="<?php echo esc_attr( $order->get_meta( '_billing_document', true ) ?: '0000000000' ); ?>"
 										required
 									>
-									<p class="description"><?php esc_html_e( 'Número de documento de identidad del cliente.', 'hoko-360' ); ?></p>
 								</td>
 							</tr>
-							<tr>
-								<th scope="row"><label for="customer_phone"><?php esc_html_e( 'Teléfono', 'hoko-360' ); ?> <span class="required">*</span></label></th>
-								<td>
-									<input 
-										type="text" 
-										id="customer_phone" 
-										name="customer[phone]" 
-										class="regular-text" 
-										value="<?php echo esc_attr( $order->get_billing_phone() ); ?>"
-										required
-									>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row"><label for="customer_address"><?php esc_html_e( 'Dirección', 'hoko-360' ); ?> <span class="required">*</span></label></th>
-								<td>
-									<input 
-										type="text" 
-										id="customer_address" 
-										name="customer[address]" 
-										class="large-text" 
-										value="<?php echo esc_attr( $order->get_billing_address_1() . ( $order->get_billing_address_2() ? ' ' . $order->get_billing_address_2() : '' ) ); ?>"
-										required
-									>
-								</td>
-							</tr>
-                            <tr>
-                                <th colspan="2">
-                                    <strong>La ciudad y departamento del cliente son:</strong>
-                                    <?php
-                                    $billing_city = $order->get_billing_city();
-                                    $billing_state = $order->get_billing_state();
-                                    
-                                    if ( $billing_city && $billing_state ) {
-                                        echo esc_html( $billing_city ) . ', ' . esc_html( $billing_state );
-                                    } elseif ( $billing_city ) {
-                                        echo esc_html( $billing_city );
-                                    } elseif ( $billing_state ) {
-                                        echo esc_html( $billing_state );
-                                    } else {
-                                        echo 'No especificados';
-                                    }
-                                    ?>
-                                </th>
-                            </tr>
 							<tr>
 								<th scope="row"><label for="customer_state"><?php esc_html_e( 'Departamento', 'hoko-360' ); ?> <span class="required">*</span></label></th>
 								<td>
@@ -207,7 +182,6 @@ if ( $current_city_id && $cities ) {
 											</option>
 										<?php endforeach; ?>
 									</select>
-									<p class="description"><?php esc_html_e( 'Departamento, Estado o Provincia de entrega.', 'hoko-360' ); ?></p>
 								</td>
 							</tr>
 							<tr>
@@ -229,15 +203,26 @@ if ( $current_city_id && $cities ) {
 										}
 										?>
 									</select>
-									<p class="description"><?php esc_html_e( 'Ciudad, Zona o Canton de entrega.', 'hoko-360' ); ?></p>
 								</td>
 							</tr>
+                            <tr>
+                                <th scope="row"><label for="customer_address"><?php esc_html_e( 'Dirección', 'hoko-360' ); ?> <span class="required">*</span></label></th>
+                                <td>
+                                    <input
+                                            type="text"
+                                            id="customer_address"
+                                            class="regular-text"
+                                            name="customer[address]"
+                                            value="<?php echo esc_attr( $order->get_billing_address_1() . ( $order->get_billing_address_2() ? ' ' . $order->get_billing_address_2() : '' ) ); ?>"
+                                            required
+                                    >
+                                </td>
+                            </tr>
 						</table>
 					</div>
 
 					<!-- Productos -->
 					<div class="hoko-confirm-section">
-						<h3><?php esc_html_e( 'Productos', 'hoko-360' ); ?></h3>
 						<table class="wp-list-table widefat fixed striped">
 							<thead>
 								<tr>
@@ -298,144 +283,70 @@ if ( $current_city_id && $cities ) {
 						</table>
 					</div>
 
-					<!-- Configuración de envío -->
-					<div class="hoko-confirm-section">
-						<h3><?php esc_html_e( 'Configuración de Envío', 'hoko-360' ); ?></h3>
-						<table class="form-table">
-							<tr>
-								<th scope="row"><label for="payment"><?php esc_html_e( 'Método de Pago', 'hoko-360' ); ?></label></th>
-								<td>
-									<select id="payment" name="payment" class="regular-text">
-										<option value="0"><?php esc_html_e( 'Pago contra entrega', 'hoko-360' ); ?></option>
-										<option value="1"><?php esc_html_e( 'Pago crédito (Usar dinero wallet)', 'hoko-360' ); ?></option>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row"><label for="courier_id"><?php esc_html_e( 'ID de Courier', 'hoko-360' ); ?> <span class="required">*</span></label></th>
-								<td>
-									<input 
-										type="text" 
-										id="courier_id" 
-										name="courier_id" 
-										class="small-text" 
-										value="44"
-										required
-									>
-									<p class="description"><?php esc_html_e( 'ID del servicio de mensajería en Hoko (por defecto: 44).', 'hoko-360' ); ?></p>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row"><label for="contain"><?php esc_html_e( 'Contenido', 'hoko-360' ); ?></label></th>
-								<td>
-									<?php
-									$items_names = array();
-									foreach ( $order->get_items() as $item ) {
-										$items_names[] = $item->get_name();
-									}
-									$contain = implode( ', ', $items_names );
-									if ( strlen( $contain ) > 100 ) {
-										$contain = substr( $contain, 0, 97 ) . '...';
-									}
-									?>
-									<input 
-										type="text" 
-										id="contain" 
-										name="contain" 
-										class="large-text" 
-										value="<?php echo esc_attr( $contain ); ?>"
-										maxlength="100"
-									>
-									<p class="description"><?php esc_html_e( 'Descripción breve del contenido del paquete (máx. 100 caracteres).', 'hoko-360' ); ?></p>
-								</td>
-							</tr>
-						</table>
-					</div>
-
 					<!-- Medidas del paquete -->
 					<div class="hoko-confirm-section">
-						<h3><?php esc_html_e( 'Medidas del Paquete', 'hoko-360' ); ?></h3>
-						<table class="form-table">
-							<tr>
-								<th scope="row"><label for="measures_height"><?php esc_html_e( 'Alto (cm)', 'hoko-360' ); ?> <span class="required">*</span></label></th>
-								<td>
-									<input 
-										type="number" 
-										id="measures_height" 
-										name="measures[height]" 
-										class="small-text" 
-										value="10"
-										min="1"
-										required
-									>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row"><label for="measures_width"><?php esc_html_e( 'Ancho (cm)', 'hoko-360' ); ?> <span class="required">*</span></label></th>
-								<td>
-									<input 
-										type="number" 
-										id="measures_width" 
-										name="measures[width]" 
-										class="small-text" 
-										value="10"
-										min="1"
-										required
-									>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row"><label for="measures_length"><?php esc_html_e( 'Largo (cm)', 'hoko-360' ); ?> <span class="required">*</span></label></th>
-								<td>
-									<input 
-										type="number" 
-										id="measures_length" 
-										name="measures[length]" 
-										class="small-text" 
-										value="10"
-										min="1"
-										required
-									>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row"><label for="measures_weight"><?php esc_html_e( 'Peso (kg)', 'hoko-360' ); ?> <span class="required">*</span></label></th>
-								<td>
-									<input 
-										type="number" 
-										id="measures_weight" 
-										name="measures[weight]" 
-										class="small-text" 
-										value="1"
-										step="0.1"
-										min="0.1"
-										required
-									>
-								</td>
-							</tr>
-						</table>
+						<h3>Medidas del paquete</h3>
+						<ul class="measures">
+                            <li>
+                                <input type="number" id="measures_height" name="measures[height]" value="10" min="1" required>
+                                <label for="measures_height">Alto (CM)</label>
+                            </li>
+                            <li>
+                                <input type="number" id="measures_width" name="measures[width]" value="10" min="1" required>
+                                <label for="measures_width">Ancho (CM)</label>
+                            </li>
+                            <li>
+                                <input type="number" id="measures_length" name="measures[length]" value="10" min="1" required>
+                                <label for="measures_length">Largo (CM)</label>
+                            </li>
+                            <li>
+                                <input type="number" id="measures_weight" name="measures[weight]" value="1" step="0.1" min="0.1" required>
+                                <label for="measures_weight">Peso (KG)</label>
+                            </li>
+						</ul>
 					</div>
 
-					<!-- ID Externo -->
-					<div class="hoko-confirm-section">
-						<h3><?php esc_html_e( 'Identificación Externa', 'hoko-360' ); ?></h3>
-						<table class="form-table">
-							<tr>
-								<th scope="row"><label for="external_id"><?php esc_html_e( 'ID Externo', 'hoko-360' ); ?></label></th>
-								<td>
-									<input 
-										type="text" 
-										id="external_id" 
-										name="external_id" 
-										class="regular-text" 
-										value="<?php echo esc_attr( $order->get_order_number() ); ?>"
-										readonly
-									>
-									<p class="description"><?php esc_html_e( 'Número de orden de WooCommerce para referencia.', 'hoko-360' ); ?></p>
-								</td>
-							</tr>
-						</table>
-					</div>
+                    <!-- Configuración de envío -->
+                    <div class="hoko-confirm-section">
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label for="payment"><?php esc_html_e( 'Método de Pago', 'hoko-360' ); ?></label></th>
+                                <td>
+                                    <select id="payment" name="payment" class="regular-text">
+                                        <option value="0"><?php esc_html_e( 'Pago contra entrega', 'hoko-360' ); ?></option>
+                                        <option value="1"><?php esc_html_e( 'Pago crédito', 'hoko-360' ); ?></option>
+                                    </select>
+                                    <p class="description">
+                                        Recuerda que si usas el pago crédito, debes tener suficiente saldo disponible en la wallet de tu tienda
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="contain"><?php esc_html_e( 'Contenido', 'hoko-360' ); ?></label></th>
+                                <td>
+                                    <?php
+                                    $items_names = array();
+                                    foreach ( $order->get_items() as $item ) {
+                                        $items_names[] = $item->get_name();
+                                    }
+                                    $contain = implode( ', ', $items_names );
+                                    if ( strlen( $contain ) > 100 ) {
+                                        $contain = substr( $contain, 0, 97 ) . '...';
+                                    }
+                                    ?>
+                                    <input
+                                            type="text"
+                                            id="contain"
+                                            name="contain"
+                                            class="large-text"
+                                            value="<?php echo esc_attr( $contain ); ?>"
+                                            maxlength="100"
+                                    >
+                                    <p class="description"><?php esc_html_e( 'Descripción breve del contenido del paquete (máx. 100 caracteres).', 'hoko-360' ); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
 
 					<!-- Mensaje de respuesta -->
 					<div id="hoko-confirm-message" style="display: none;"></div>
