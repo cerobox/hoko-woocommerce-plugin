@@ -348,6 +348,17 @@ if ( $current_city_id && $cities ) {
                         </table>
                     </div>
 
+                    <div class="quotation">
+                        <button type="button" class="button" id="hoko-quote-shipping">
+                            <?php esc_html_e( 'Cotizar envío', 'hoko-360' ); ?>
+                        </button>
+                        <div id="hoko-quotation-results" style="display: none; margin-top: 20px;">
+                            <!-- Aquí se mostrarán las opciones de transporte -->
+                        </div>
+                        <input type="hidden" id="selected_courier_id" name="selected_courier_id" value="">
+                        <input type="hidden" id="selected_courier_value" name="selected_courier_value" value="">
+                    </div>
+
 					<!-- Mensaje de respuesta -->
 					<div id="hoko-confirm-message" style="display: none;"></div>
 
@@ -357,9 +368,6 @@ if ( $current_city_id && $cities ) {
 							<?php esc_html_e( 'Confirmar y Crear Orden en Hoko', 'hoko-360' ); ?>
 						</button>
 						<span class="spinner"></span>
-						<a href="<?php echo esc_url( admin_url( 'admin.php?page=hoko-360-orders' ) ); ?>" class="button button-large">
-							<?php esc_html_e( 'Cancelar', 'hoko-360' ); ?>
-						</a>
 					</p>
 				</form>
 			</div>

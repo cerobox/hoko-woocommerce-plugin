@@ -245,6 +245,88 @@
 	margin: 20px 0;
 }
 
+/* Estilos para cotización de envío */
+.quotation {
+	margin: 20px 0;
+	padding: 20px;
+	border: 1px solid #e5e5e5;
+	border-radius: 4px;
+	background: #fafafa;
+}
+
+#hoko-quote-shipping {
+	margin-bottom: 15px;
+}
+
+#hoko-quote-shipping:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+#hoko-quotation-results h4 {
+	margin: 0 0 15px 0;
+	color: #1d2327;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.quotation-options {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.quotation-option {
+	padding: 15px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fff;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.quotation-option:hover {
+	border-color: #0073aa;
+	box-shadow: 0 0 0 1px #0073aa;
+}
+
+.quotation-option.selected {
+	border-color: #0073aa;
+	background: #f0f6fc;
+	box-shadow: 0 0 0 1px #0073aa;
+}
+
+.quotation-option label {
+	display: flex;
+	align-items: center;
+	margin: 0;
+	cursor: pointer;
+	width: 100%;
+}
+
+.quotation-option input[type="radio"] {
+	margin: 0 10px 0 0;
+}
+
+.quotation-option img {
+	width: 40px;
+	height: 40px;
+	margin-right: 10px;
+	vertical-align: middle;
+	object-fit: contain;
+}
+
+.quotation-option strong {
+	flex: 1;
+	color: #1d2327;
+}
+
+.quotation-option span {
+	color: #0073aa;
+	font-weight: 600;
+	font-size: 14px;
+}
+
 /* Estilos para la página de sincronización de ciudades */
 .hoko-sync-section {
 	margin-top: 20px;

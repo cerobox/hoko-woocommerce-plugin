@@ -991,6 +991,108 @@ class Hoko_Admin {
 	}
 
 	/**
+	 * Maneja la petición AJAX para obtener cotización de envío.
+	 */
+	public function handle_shipping_quotation_request() {
+		$this->verify_ajax_request();
+
+		// Obtener parámetros de la cotización
+		$stock_ids = isset( $_POST['stock_ids'] ) ? sanitize_text_field( $_POST['stock_ids'] ) : '';
+		$city_to = isset( $_POST['city_to'] ) ? absint( $_POST['city_to'] ) : 0;
+		$payment = isset( $_POST['payment'] ) ? absint( $_POST['payment'] ) : 0;
+		$declared_value = isset( $_POST['declared_value'] ) ? absint( $_POST['declared_value'] ) : 10000;
+		$width = isset( $_POST['width'] ) ? absint( $_POST['width'] ) : 10;
+		$height = isset( $_POST['height'] ) ? absint( $_POST['height'] ) : 10;
+		$length = isset( $_POST['length'] ) ? absint( $_POST['length'] ) : 10;
+		$weight = isset( $_POST['weight'] ) ? floatval( $_POST['weight'] ) : 1;
+		$collection_value = isset( $_POST['collection_value'] ) ? absint( $_POST['collection_value'] ) : 150000;
+
+		// Validar parámetros requeridos
+		if ( ! $stock_ids || ! $city_to ) {
+			wp_send_json_error( array( 'message' => __( 'Faltan parámetros requeridos para la cotización.', 'hoko-360' ) ) );
+		}
+
+		// Obtener token de autentificación
+		$token = $this->get_auth_token();
+		if ( ! $token ) {
+			wp_send_json_error( array( 'message' => __( 'No estás autenticado. Por favor inicia sesión nuevamente.', 'hoko-360' ) ) );
+		}
+
+		// Obtener país configurado
+		$country = get_option( 'hoko_360_auth_country', 'colombia' );
+		if ( ! isset( $this->api_endpoints[ $country ] ) ) {
+			wp_send_json_error( array( 'message' => __( 'País no configurado correctamente.', 'hoko-360' ) ) );
+		}
+
+		// Construir URL de la API
+		$api_url = $this->api_endpoints[ $country ]['base'] . '/member/stock/quotation';
+
+		// Preparar datos para la petición
+		$post_data = array(
+			'stock_ids' => $stock_ids,
+			'city_to' => $city_to,
+			'payment' => $payment,
+			'declared_value' => $declared_value,
+			'width' => $width,
+			'height' => $height,
+			'length' => $length,
+			'weight' => $weight,
+			'collection_value' => $collection_value
+		);
+
+		// Realizar petición a la API
+		$response = wp_remote_post(
+			$api_url,
+			array(
+				'method' => 'POST',
+				'headers' => array(
+					'Authorization' => 'Bearer ' . $token,
+					'Content-Type' => 'application/json',
+				),
+				'body' => json_encode( $post_data ),
+				'timeout' => 30,
+			)
+		);
+
+		// Verificar si hay error en la petición
+		if ( is_wp_error( $response ) ) {
+			wp_send_json_error( array( 'message' => __( 'Error al conectar con la API de Hoko: ', 'hoko-360' ) . $response->get_error_message() ) );
+		}
+
+		// Obtener código de estado y cuerpo de la respuesta
+		$status_code = wp_remote_retrieve_response_code( $response );
+		$response_body = wp_remote_retrieve_body( $response );
+
+		// Verificar código de estado
+		if ( $status_code !== 200 ) {
+			wp_send_json_error( array( 'message' => __( 'Error en la respuesta de la API. Código: ', 'hoko-360' ) . $status_code ) );
+		}
+
+		// Decodificar respuesta JSON
+		$data = json_decode( $response_body, true );
+		if ( json_last_error() !== JSON_ERROR_NONE ) {
+			wp_send_json_error( array( 'message' => __( 'Error al procesar la respuesta de la API.', 'hoko-360' ) ) );
+		}
+
+		// Verificar si la respuesta es exitosa
+		if ( ! isset( $data['status'] ) || $data['status'] !== 'success' ) {
+			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error desconocido al obtener cotización.', 'hoko-360' );
+			wp_send_json_error( array( 'message' => $error_message ) );
+		}
+
+		// Verificar si hay cotizaciones disponibles
+		if ( ! isset( $data['quotations'] ) || empty( $data['quotations'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'No se encontraron cotizaciones disponibles para esta ruta.', 'hoko-360' ) ) );
+		}
+
+		// Enviar respuesta exitosa con las cotizaciones
+		wp_send_json_success( array(
+			'message' => __( 'Cotización obtenida exitosamente.', 'hoko-360' ),
+			'quotations' => $data['quotations']
+		) );
+	}
+
+	/**
 	 * Maneja la petición AJAX para cerrar sesión.
 	 */
 	public function handle_logout_request() {

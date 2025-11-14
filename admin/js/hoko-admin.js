@@ -114,6 +114,156 @@
 			});
 		});
 		
+		// Manejo del botón de cotización de envío
+		$('#hoko-quote-shipping').on('click', function(e) {
+			e.preventDefault();
+			
+			var $button = $(this);
+			var $resultsDiv = $('#hoko-quotation-results');
+			var $message = $('#hoko-confirm-message');
+			
+			// Obtener datos del formulario para la cotización
+			var cityTo = $('#customer_city_id').val();
+			var payment = $('#payment').val();
+			var height = $('#measures_height').val();
+			var width = $('#measures_width').val();
+			var length = $('#measures_length').val();
+			var weight = $('#measures_weight').val();
+			
+			// Validar campos requeridos
+			if (!cityTo) {
+				showConfirmMessage('error', 'Por favor selecciona una ciudad de destino.');
+				return;
+			}
+			
+			if (!height || !width || !length || !weight) {
+				showConfirmMessage('error', 'Por favor completa las medidas del paquete.');
+				return;
+			}
+			
+			// Obtener stock_ids de los productos
+			var stockIds = [];
+			$('input[name*="[sku]"]').each(function() {
+				var sku = $(this).val();
+				if (sku) {
+					stockIds.push(sku);
+				}
+			});
+			
+			if (stockIds.length === 0) {
+				showConfirmMessage('error', 'No se encontraron productos para cotizar.');
+				return;
+			}
+			
+			// Deshabilitar botón y mostrar estado de carga
+			$button.prop('disabled', true).text('Cotizando...');
+			$message.hide();
+			$resultsDiv.hide();
+			
+			// Realizar petición AJAX para cotización
+			$.ajax({
+				url: hokoAdmin.ajaxurl,
+				type: 'POST',
+				dataType: 'json',
+				data: {
+					action: 'hoko_get_shipping_quotation',
+					nonce: hokoAdmin.nonce,
+					stock_ids: stockIds.join(','),
+					city_to: cityTo,
+					payment: payment,
+					declared_value: 10000,
+					width: width,
+					height: height,
+					length: length,
+					weight: weight,
+					collection_value: 150000
+				},
+				success: function(response) {
+					if (response.success) {
+						displayQuotationResults(response.data.quotations);
+					} else {
+						showConfirmMessage('error', response.data.message);
+					}
+				},
+				error: function(xhr, status, error) {
+					showConfirmMessage('error', 'Error en la conexión: ' + error);
+				},
+				complete: function() {
+					// Rehabilitar botón
+					$button.prop('disabled', false).text('Cotizar envío');
+				}
+			});
+		});
+		
+		/**
+		 * Muestra los resultados de la cotización como radio buttons
+		 */
+		function displayQuotationResults(quotations) {
+			var $resultsDiv = $('#hoko-quotation-results');
+			
+			if (!quotations || quotations.length === 0) {
+				showConfirmMessage('error', 'No se encontraron opciones de envío disponibles.');
+				return;
+			}
+			
+			// Ordenar cotizaciones por valor (de menor a mayor)
+			quotations.sort(function(a, b) {
+				return a.value - b.value;
+			});
+			
+			// Generar HTML para las opciones
+			var html = '<h4>Selecciona una transportadora:</h4>';
+			html += '<div class="quotation-options">';
+			
+			quotations.forEach(function(quotation, index) {
+				var courierId = quotation.courier_id;
+				var courierName = quotation.courier_name;
+				var courierLogo = quotation.courier_logo;
+				var value = quotation.value;
+				var formattedValue = new Intl.NumberFormat('es-CO', {
+					style: 'currency',
+					currency: 'COP'
+				}).format(value);
+				
+				var isSelected = index === 0 ? 'selected' : '';
+				
+				html += '<div class="quotation-option ' + isSelected + '">';
+				html += '<label>';
+				html += '<input type="radio" name="courier_option" value="' + courierId + '" data-value="' + value + '" ' + (index === 0 ? 'checked' : '') + '>';
+				html += '<img src="' + courierLogo + '" alt="' + courierName + '">';
+				html += '<strong>' + courierName + '</strong>';
+				html += '<span>' + formattedValue + '</span>';
+				html += '</label>';
+				html += '</div>';
+			});
+			
+			html += '</div>';
+			
+			// Mostrar resultados
+			$resultsDiv.html(html).slideDown();
+			
+			// Manejar selección de transportadora
+			$('input[name="courier_option"]').on('change', function() {
+				var selectedId = $(this).val();
+				var selectedValue = $(this).data('value');
+				
+				// Actualizar campos ocultos
+				$('#selected_courier_id').val(selectedId);
+				$('#selected_courier_value').val(selectedValue);
+				
+				// Actualizar estado visual de las opciones
+				$('.quotation-option').removeClass('selected');
+				$(this).closest('.quotation-option').addClass('selected');
+			});
+			
+			// Establecer valores iniciales (primera opción)
+			var $firstOption = $('input[name="courier_option"]:checked');
+			if ($firstOption.length > 0) {
+				$('#selected_courier_id').val($firstOption.val());
+				$('#selected_courier_value').val($firstOption.data('value'));
+			}
+		}
+
 		// Manejo del formulario de confirmación de orden
 		$('#hoko-confirm-form').on('submit', function(e) {
 			e.preventDefault();
@@ -122,6 +272,13 @@
 			var $submitButton = $('#hoko-confirm-submit');
 			var $spinner = $form.find('.spinner');
 			var $message = $('#hoko-confirm-message');
+			
+			// Validar que se haya seleccionado una transportadora
+			var selectedCourierId = $('#selected_courier_id').val();
+			if (!selectedCourierId) {
+				showConfirmMessage('error', 'Por favor cotiza el envío y selecciona una transportadora antes de crear la orden.');
+				return;
+			}
 			
 			// Serializar datos del formulario
 			var formData = $form.serializeArray();
