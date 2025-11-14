@@ -427,7 +427,7 @@ class Hoko_Admin {
 	/**
 	 * Realiza petición a la API de Hoko.
 	 */
-	private function make_api_request( $endpoint, $data, $token = '' ) {
+	private function make_api_request( $endpoint, $data, $token = '', $method = 'POST' ) {
 		$headers = array( 'Content-Type' => 'application/json' );
 		if ( $token ) {
 			$headers['Authorization'] = 'Bearer ' . $token;
@@ -436,16 +436,55 @@ class Hoko_Admin {
 		// Para depuración: registrar headers completos
 		error_log( 'Hoko Debug - Headers: ' . print_r( $headers, true ) );
 		error_log( 'Hoko Debug - Request Data: ' . print_r( $data, true ) );
+		error_log( 'Hoko Debug - Method: ' . $method );
+		error_log( 'Hoko Debug - Endpoint: ' . $endpoint );
 
-		// Para endpoints GET como get-states y get-cities, usar GET en lugar de POST
-		$response = wp_remote_get(
-			$endpoint,
-			array(
-				'method'  => 'GET',
-				'timeout' => 45,
-				'headers' => $headers,
-			)
+		// Preparar argumentos de la petición
+		$args = array(
+			'method'  => $method,
+			'timeout' => 45,
+			'headers' => $headers,
 		);
+
+		// Agregar body solo para métodos POST/PUT/PATCH
+		if ( in_array( $method, array( 'POST', 'PUT', 'PATCH' ), true ) && ! empty( $data ) ) {
+			// Log detallado de los datos antes de construir el JSON
+			error_log( 'Hoko Debug - Data before JSON construction: ' . print_r( $data, true ) );
+			error_log( 'Hoko Debug - Customer is string: ' . ( is_string( $data['customer'] ?? null ) ? 'YES' : 'NO' ) );
+			error_log( 'Hoko Debug - Stocks is string: ' . ( is_string( $data['stocks'] ?? null ) ? 'YES' : 'NO' ) );
+			error_log( 'Hoko Debug - Measures is string: ' . ( is_string( $data['measures'] ?? null ) ? 'YES' : 'NO' ) );
+			
+			// Construir JSON manualmente para manejar strings JSON anidados (customer, stocks y measures)
+			$json_parts = array();
+			foreach ( $data as $key => $value ) {
+				$json_key = json_encode( $key );
+				
+				// Si el valor ya es un string JSON válido (customer, stocks o measures), codificarlo como string
+				if ( is_string( $value ) && in_array( $key, array( 'customer', 'stocks', 'measures' ), true ) ) {
+					// Validar que sea JSON válido
+					$test_decode = json_decode( $value );
+					if ( json_last_error() === JSON_ERROR_NONE ) {
+						// Codificar el string JSON como string (con comillas y escapes)
+						error_log( "Hoko Debug - Encoding JSON string for {$key}: {$value}" );
+						$json_parts[] = $json_key . ':' . json_encode( $value );
+					} else {
+						// Si no es JSON válido, codificarlo como string normal
+						error_log( "Hoko Debug - JSON invalid for {$key}, encoding as string" );
+						$json_parts[] = $json_key . ':' . json_encode( $value );
+					}
+				} else {
+					// Para otros valores, usar json_encode normal
+					error_log( "Hoko Debug - Encoding {$key} normally" );
+					$json_parts[] = $json_key . ':' . json_encode( $value );
+				}
+			}
+			
+			$args['body'] = '{' . implode( ',', $json_parts ) . '}';
+			error_log( 'Hoko Debug - Request Body: ' . $args['body'] );
+		}
+
+		// Realizar petición
+		$response = wp_remote_request( $endpoint, $args );
 		
 		return $response;
 	}
@@ -490,6 +529,14 @@ class Hoko_Admin {
 	 * Maneja la petición AJAX para crear orden en Hoko.
 	 */
 	public function handle_create_order_request() {
+		// Log inicial para depuración
+		error_log( 'Hoko Debug - handle_create_order_request called' );
+		error_log( 'Hoko Debug - REQUEST_METHOD: ' . ($_SERVER['REQUEST_METHOD'] ?? 'not set') );
+		error_log( 'Hoko Debug - CONTENT_TYPE: ' . ($_SERVER['CONTENT_TYPE'] ?? 'not set') );
+		error_log( 'Hoko Debug - POST raw: ' . file_get_contents('php://input') );
+		error_log( 'Hoko Debug - POST array: ' . print_r( $_POST, true ) );
+		error_log( 'Hoko Debug - GET array: ' . print_r( $_GET, true ) );
+		
 		$this->verify_ajax_request();
 
 		// Verificar autenticación
@@ -558,18 +605,88 @@ class Hoko_Admin {
 	 * @return array Datos formateados para Hoko.
 	 */
 	private function prepare_order_data_from_form() {
-		$customer = $this->sanitize_customer_data( $_POST['customer'] ?? array() );
-		$stocks = $this->sanitize_stocks_data( $_POST['stocks'] ?? array() );
-		$measures = $this->sanitize_measures_data( $_POST['measures'] ?? array() );
+		// Log para depuración: mostrar todos los datos POST recibidos
+		error_log( 'Hoko Debug - POST data received: ' . print_r( $_POST, true ) );
+		error_log( 'Hoko Debug - FILES data received: ' . print_r( $_FILES, true ) );
+		error_log( 'Hoko Debug - RAW customer from POST: ' . var_export( $_POST['customer'] ?? 'NOT SET', true ) );
+		error_log( 'Hoko Debug - RAW measures from POST: ' . var_export( $_POST['measures'] ?? 'NOT SET', true ) );
+		
+		// Obtener customer como string JSON (NO decodificar, la API de Hoko espera un string)
+		$customer_json = $_POST['customer'] ?? '{}';
+		
+		// Remover backslashes escapados que PHP puede agregar
+		$customer_json = stripslashes( $customer_json );
+		
+		// Log el tipo de dato
+		error_log( 'Hoko Debug - Customer type: ' . gettype( $customer_json ) );
+		error_log( 'Hoko Debug - Customer value after stripslashes: ' . ( is_string( $customer_json ) ? $customer_json : 'NOT A STRING' ) );
+		
+		// Validar que sea un JSON válido
+		$customer_test = json_decode( $customer_json, true );
+		if ( json_last_error() !== JSON_ERROR_NONE ) {
+			error_log( 'Hoko Debug - Error validando customer JSON: ' . json_last_error_msg() );
+			$customer_json = '{}';
+		}
+		
+		// Obtener stocks como string JSON (la API de Hoko espera un string)
+		$stocks_json = $_POST['stocks'] ?? '{}';
+		
+		// Si stocks viene como array (por compatibilidad), convertirlo a JSON
+		if ( is_array( $_POST['stocks'] ?? null ) ) {
+			$stocks = $this->sanitize_stocks_data( $_POST['stocks'] );
+			$stocks_json = json_encode( $stocks );
+		} else {
+			// Remover backslashes escapados que PHP puede agregar
+			$stocks_json = stripslashes( $stocks_json );
+			
+			// Validar que sea un JSON válido
+			$stocks_test = json_decode( $stocks_json, true );
+			if ( json_last_error() !== JSON_ERROR_NONE ) {
+				error_log( 'Hoko Debug - Error validando stocks JSON: ' . json_last_error_msg() );
+				$stocks_json = '{}';
+			}
+		}
+		
+		// Obtener measures como string JSON (la API de Hoko espera un string)
+		$measures_json = $_POST['measures'] ?? '{}';
+		
+		// Si measures viene como array (por compatibilidad), convertirlo a JSON
+		if ( is_array( $_POST['measures'] ?? null ) ) {
+			$measures_data = array(
+				'height' => isset( $_POST['measures']['height'] ) ? sanitize_text_field( $_POST['measures']['height'] ) : '10',
+				'width'  => isset( $_POST['measures']['width'] ) ? sanitize_text_field( $_POST['measures']['width'] ) : '10',
+				'length' => isset( $_POST['measures']['length'] ) ? sanitize_text_field( $_POST['measures']['length'] ) : '10',
+				'weight' => isset( $_POST['measures']['weight'] ) ? sanitize_text_field( $_POST['measures']['weight'] ) : '1',
+			);
+			$measures_json = json_encode( $measures_data );
+		} else {
+			// Remover backslashes escapados que PHP puede agregar
+			$measures_json = stripslashes( $measures_json );
+			
+			// Validar que sea un JSON válido
+			$measures_test = json_decode( $measures_json, true );
+			if ( json_last_error() !== JSON_ERROR_NONE ) {
+				error_log( 'Hoko Debug - Error validando measures JSON: ' . json_last_error_msg() );
+				$measures_json = '{"height":"10","width":"10","length":"10","weight":"1"}';
+			}
+		}
+
+		// Log para depuración: mostrar datos procesados
+		error_log( 'Hoko Debug - Customer JSON (string): ' . $customer_json );
+		error_log( 'Hoko Debug - Stocks JSON (string): ' . $stocks_json );
+		error_log( 'Hoko Debug - Measures JSON (string): ' . $measures_json );
+		error_log( 'Hoko Debug - Payment: ' . ($_POST['payment'] ?? 'not set') );
+		error_log( 'Hoko Debug - Courier ID: ' . ($_POST['selected_courier_id'] ?? 'not set') );
+		error_log( 'Hoko Debug - Contain: ' . ($_POST['contain'] ?? 'not set') );
 
 		return array(
-			'customer'    => $customer,
-			'stocks'      => $stocks,
+			'customer'    => $customer_json,  // String JSON
+			'stocks'      => $stocks_json,     // String JSON
 			'payment'     => isset( $_POST['payment'] ) ? absint( $_POST['payment'] ) : 0,
-			'courier_id'  => isset( $_POST['courier_id'] ) ? absint( $_POST['courier_id'] ) : 44,
+			'courier_id'  => isset( $_POST['selected_courier_id'] ) ? absint( $_POST['selected_courier_id'] ) : 44,
 			'contain'     => isset( $_POST['contain'] ) ? sanitize_text_field( $_POST['contain'] ) : '',
-			'measures'    => $measures,
-			'external_id' => isset( $_POST['external_id'] ) ? sanitize_text_field( $_POST['external_id'] ) : '',
+			'measures'    => $measures_json,   // String JSON
+			'external_id' => isset( $_POST['order_id'] ) ? sanitize_text_field( $_POST['order_id'] ) : '',
 		);
 	}
 
@@ -577,6 +694,24 @@ class Hoko_Admin {
 	 * Sanitiza datos del cliente.
 	 */
 	private function sanitize_customer_data( $customer_data ) {
+		// Si customer_data es un string JSON, decodificarlo primero
+		if ( is_string( $customer_data ) ) {
+			$decoded_data = json_decode( $customer_data, true );
+			if ( json_last_error() === JSON_ERROR_NONE && is_array( $decoded_data ) ) {
+				$customer_data = $decoded_data;
+			} else {
+				// Log para depuración
+				error_log( 'Hoko Debug - Error decodificando customer JSON: ' . json_last_error_msg() );
+				error_log( 'Hoko Debug - Customer JSON recibido: ' . $customer_data );
+				$customer_data = array();
+			}
+		}
+		
+		// Asegurar que es un array
+		if ( ! is_array( $customer_data ) ) {
+			$customer_data = array();
+		}
+		
 		return array(
 			'name'           => isset( $customer_data['name'] ) ? sanitize_text_field( $customer_data['name'] ) : '',
 			'email'          => isset( $customer_data['email'] ) ? sanitize_email( $customer_data['email'] ) : '',
@@ -778,7 +913,7 @@ class Hoko_Admin {
 		error_log( 'Hoko Debug - Sync States URL: ' . $api_url );
 		error_log( 'Hoko Debug - Token: ' . substr( $token, 0, 10 ) . '...' );
 		
-		$response = $this->make_api_request( $api_url, array(), $token );
+		$response = $this->make_api_request( $api_url, array(), $token, 'GET' );
 
 		if ( is_wp_error( $response ) ) {
 			$error_msg = 'Error al obtener estados: ' . $response->get_error_message();
@@ -808,7 +943,7 @@ class Hoko_Admin {
 	 */
 	private function sync_cities( $token, $country ) {
 		$api_url = $this->get_api_base_url( $country ) . '/member/get-cities';
-		$response = $this->make_api_request( $api_url, array(), $token );
+		$response = $this->make_api_request( $api_url, array(), $token, 'GET' );
 
 		if ( is_wp_error( $response ) ) {
 			throw new Exception( __( 'Error al obtener ciudades: ', 'hoko-360' ) . $response->get_error_message() );

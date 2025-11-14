@@ -2,6 +2,90 @@
 	'use strict';
 
 	/**
+	 * Valida el formato del objeto customer según la especificación
+	 */
+	function validateCustomerFormat(customer) {
+		// Verificar que el objeto no sea nulo o undefined
+		if (!customer) {
+			return 'Los datos del cliente son inválidos.';
+		}
+		
+		// Validar name (requerido)
+		if (!customer.name || customer.name.trim() === '') {
+			return 'El nombre del cliente es requerido.';
+		}
+		if (customer.name.length > 100) {
+			return 'El nombre del cliente no puede exceder 100 caracteres.';
+		}
+		
+		// Validar email (requerido y formato válido)
+		if (!customer.email || customer.email.trim() === '') {
+			return 'El email del cliente es requerido.';
+		}
+		var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(customer.email)) {
+			return 'El formato del email no es válido.';
+		}
+		if (customer.email.length > 100) {
+			return 'El email no puede exceder 100 caracteres.';
+		}
+		
+		// Validar identification (requerido)
+		if (!customer.identification || customer.identification.trim() === '') {
+			return 'La identificación del cliente es requerida.';
+		}
+		if (customer.identification.length > 20) {
+			return 'La identificación no puede exceder 20 caracteres.';
+		}
+		
+		// Validar phone (requerido)
+		if (!customer.phone || customer.phone.trim() === '') {
+			return 'El teléfono del cliente es requerido.';
+		}
+		// Permitir dígitos, espacios, +, -, () y caracteres comunes en teléfonos
+		var phoneRegex = /^[0-9\s\-\+\(\)]+$/;
+		if (!phoneRegex.test(customer.phone)) {
+			return 'El formato del teléfono no es válido. Solo se permiten dígitos y caracteres especiales comunes (+, -, (), espacios).';
+		}
+		if (customer.phone.length > 20) {
+			return 'El teléfono no puede exceder 20 caracteres.';
+		}
+		
+		// Validar address (requerido)
+		if (!customer.address || customer.address.trim() === '') {
+			return 'La dirección del cliente es requerida.';
+		}
+		if (customer.address.length > 200) {
+			return 'La dirección no puede exceder 200 caracteres.';
+		}
+		
+		// Validar city_id (requerido y numérico)
+		if (!customer.city_id || customer.city_id.trim() === '') {
+			return 'La ciudad del cliente es requerida.';
+		}
+		if (!/^\d+$/.test(customer.city_id)) {
+			return 'El ID de la ciudad debe ser un valor numérico.';
+		}
+		
+		// Si todas las validaciones pasan, retornar null (sin error)
+		return null;
+	}
+
+	/**
+	 * Formatea el objeto customer exactamente como lo requiere la API
+	 */
+	function formatCustomerForAPI(customer) {
+		return {
+			"name": customer.name,
+			"email": customer.email,
+			"identification": customer.identification,
+			"phone": customer.phone,
+			"address": customer.address,
+			"city_id": customer.city_id
+		};
+	}
+
+	/**
 	 * Maneja el formulario de autentificación y logout
 	 */
 	$(document).ready(function() {
@@ -290,45 +374,100 @@
 				return;
 			}
 			
-			// Serializar datos del formulario
-			var formData = $form.serializeArray();
-			var postData = {
-				action: 'hoko_create_order',
-				nonce: hokoAdmin.nonce
+			// Validar formato del objeto customer
+			var customerData = {
+				name: $('#customer_name').val().trim(),
+				email: $('#customer_email').val().trim(),
+				identification: $('#customer_identification').val().trim(),
+				phone: $('#customer_phone').val().trim(),
+				address: $('#customer_address').val().trim(),
+				city_id: $('#customer_city_id').val().trim()
 			};
 			
-			// Convertir datos del formulario a objeto
-			$.each(formData, function(i, field) {
-				var name = field.name;
-				var value = field.value;
+			var validationError = validateCustomerFormat(customerData);
+			if (validationError) {
+				showConfirmMessage('error', validationError);
+				return;
+			}
+			
+			// Formatear el customer según el formato exacto de la API
+			var formattedCustomer = formatCustomerForAPI(customerData);
+			var customerJSON = JSON.stringify(formattedCustomer);
+			
+			// Mostrar el formato del customer en consola para validación
+			console.log('Customer data validated:', JSON.stringify(customerData, null, 2));
+			console.log('Formatted customer JSON:', customerJSON);
+			
+			// Construir measures como JSON string
+			var measuresData = {
+				height: $('#measures_height').val() || '10',
+				width: $('#measures_width').val() || '10',
+				length: $('#measures_length').val() || '10',
+				weight: $('#measures_weight').val() || '1'
+			};
+			var measuresJSON = JSON.stringify(measuresData);
+			
+			// Construir stocks como JSON string
+			var stocksData = {};
+			$form.find('input[name^="stocks["]').each(function() {
+				var $input = $(this);
+				var name = $input.attr('name');
+				var value = $input.val();
 				
-				// Manejar arrays anidados (customer, stocks, measures)
-				if (name.indexOf('[') !== -1) {
-					var parts = name.match(/([^\[]+)\[([^\]]+)\](?:\[([^\]]+)\])?/);
-					if (parts) {
-						var mainKey = parts[1];
-						var subKey = parts[2];
-						var subSubKey = parts[3];
-						
-						if (!postData[mainKey]) {
-							postData[mainKey] = {};
+				// Parsear stocks[0][sku], stocks[0][amount], stocks[0][price]
+				var matches = name.match(/stocks\[(\d+)\]\[(\w+)\]/);
+				if (matches && value) {
+					var index = matches[1];
+					var field = matches[2];
+					
+					// El SKU es la clave del objeto stocks
+					if (field === 'sku') {
+						if (!stocksData[value]) {
+							stocksData[value] = {};
 						}
-						
-						if (subSubKey) {
-							// Caso: stocks[0][sku]
-							if (!postData[mainKey][subKey]) {
-								postData[mainKey][subKey] = {};
+						// Guardar el índice para asociar amount y price
+						$input.data('stock-key', value);
+					} else if (field === 'amount' || field === 'price') {
+						// Buscar el SKU correspondiente a este índice
+						var sku = $form.find('input[name="stocks[' + index + '][sku]"]').val();
+						if (sku) {
+							if (!stocksData[sku]) {
+								stocksData[sku] = {};
 							}
-							postData[mainKey][subKey][subSubKey] = value;
-						} else {
-							// Caso: customer[name]
-							postData[mainKey][subKey] = value;
+							stocksData[sku][field] = field === 'amount' ? parseInt(value) : parseFloat(value);
 						}
 					}
-				} else {
-					postData[name] = value;
 				}
 			});
+			var stocksJSON = JSON.stringify(stocksData);
+			
+			// Preparar datos para enviar - serialización manual
+			var formDataParts = [];
+			formDataParts.push('action=' + encodeURIComponent('hoko_create_order'));
+			formDataParts.push('nonce=' + encodeURIComponent(hokoAdmin.nonce));
+			formDataParts.push('customer=' + encodeURIComponent(customerJSON));
+			formDataParts.push('measures=' + encodeURIComponent(measuresJSON));
+			formDataParts.push('stocks=' + encodeURIComponent(stocksJSON));
+			
+			// Agregar otros campos del formulario (excluyendo customer, measures y stocks)
+			var $formInputs = $form.find('input, select, textarea').not('[name^="customer["]').not('[name^="measures["]').not('[name^="stocks["]');
+			$formInputs.each(function() {
+				var $input = $(this);
+				var name = $input.attr('name');
+				var value = $input.val();
+				
+				if (name && value !== undefined && value !== '') {
+					formDataParts.push(encodeURIComponent(name) + '=' + encodeURIComponent(value));
+				}
+			});
+			
+			var postDataString = formDataParts.join('&');
+			
+			// Log para verificar datos a enviar
+			console.log('POST data string:', postDataString);
+			console.log('Customer JSON:', customerJSON);
+			console.log('Measures JSON:', measuresJSON);
+			console.log('Stocks JSON:', stocksJSON);
 			
 			// Deshabilitar botón y mostrar spinner
 			$submitButton.prop('disabled', true);
@@ -339,8 +478,8 @@
 			$.ajax({
 				url: hokoAdmin.ajaxurl,
 				type: 'POST',
-				dataType: 'json',
-				data: postData,
+				data: postDataString,
+				contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
 				success: function(response) {
 					if (response.success) {
 						showConfirmMessage('success', response.data.message);

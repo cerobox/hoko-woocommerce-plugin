@@ -113,6 +113,7 @@ if ( $current_city_id && $cities ) {
                             }
                             ?>
                         </h3>
+                        <input type="hidden" name="order_id" value="<?php echo esc_attr( $order->get_id() ); ?>">
 						<table class="form-table">
 							<tr>
 								<th scope="row"><label for="customer_name"><?php esc_html_e( 'Nombre', 'hoko-360' ); ?> <span class="required">*</span></label></th>
