@@ -160,6 +160,11 @@
 			$message.hide();
 			$resultsDiv.hide();
 			
+			// Resetear botón de confirmación y campos ocultos
+			$('#hoko-confirm-submit').prop('disabled', true);
+			$('#selected_courier_id').val('');
+			$('#selected_courier_value').val('');
+			
 			// Realizar petición AJAX para cotización
 			$.ajax({
 				url: hokoAdmin.ajaxurl,
@@ -242,7 +247,7 @@
 			// Mostrar resultados
 			$resultsDiv.html(html).slideDown();
 			
-			// Manejar selección de transportadora
+		// Manejar selección de transportadora
 			$('input[name="courier_option"]').on('change', function() {
 				var selectedId = $(this).val();
 				var selectedValue = $(this).data('value');
@@ -250,6 +255,9 @@
 				// Actualizar campos ocultos
 				$('#selected_courier_id').val(selectedId);
 				$('#selected_courier_value').val(selectedValue);
+				
+				// Habilitar botón de confirmación
+				$('#hoko-confirm-submit').prop('disabled', false);
 				
 				// Actualizar estado visual de las opciones
 				$('.quotation-option').removeClass('selected');
@@ -261,6 +269,8 @@
 			if ($firstOption.length > 0) {
 				$('#selected_courier_id').val($firstOption.val());
 				$('#selected_courier_value').val($firstOption.data('value'));
+				// Habilitar botón de confirmación si hay una opción preseleccionada
+				$('#hoko-confirm-submit').prop('disabled', false);
 			}
 		}
 
