@@ -492,6 +492,26 @@
 			}
 		});
 		
+		/**
+		 * Reset quotation results and disable confirm button
+		 */
+		function resetQuotation() {
+			$('#hoko-quotation-results').hide();
+			$('#hoko-confirm-submit').prop('disabled', true);
+			$('#selected_courier_id').val('');
+			$('#selected_courier_value').val('');
+		}
+
+		// Monitor form changes to reset quotation
+		$('#customer_state, #customer_city_id, #payment, #measures_height, #measures_width, #measures_length, #measures_weight').on('change', function() {
+			resetQuotation();
+		});
+
+		// Monitor product quantity and price changes
+		$(document).on('change', 'input[name*="[quantity]"], input[name*="[price]"]', function() {
+			resetQuotation();
+		});
+
 		// Cargar ciudades al cargar la página si hay un estado seleccionado
 		if ($('#customer_state').val()) {
 			$('#customer_state').trigger('change');
