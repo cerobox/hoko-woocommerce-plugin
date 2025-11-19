@@ -15,8 +15,8 @@ class Hoko_Admin {
 	 */
 	private $api_endpoints = array(
 		'colombia' => array(
-			'login' => 'https://v4.hoko.com.co/api/login',
-			'base'  => 'https://v4.hoko.com.co/api'
+			'login' => 'https://hoko.com.co/api/login',
+			'base'  => 'https://hoko.com.co/api'
 		),
 		'ecuador' => array(
 			'login' => 'https://hoko.com.ec/api/login',
