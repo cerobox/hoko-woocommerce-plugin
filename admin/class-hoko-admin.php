@@ -577,6 +577,10 @@ class Hoko_Admin {
 	 * @return array Datos formateados para Hoko.
 	 */
 	private function prepare_order_data_from_form() {
+		// Obtener la orden para capturar billing_city y billing_state
+		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+		$order = wc_get_order( $order_id );
+		
 		// Obtener customer como string JSON (NO decodificar, la API de Hoko espera un string)
 		$customer_json = $_POST['customer'] ?? '{}';
 		$customer_json = stripslashes( $customer_json );
@@ -585,6 +589,14 @@ class Hoko_Admin {
 		$customer_test = json_decode( $customer_json, true );
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
 			$customer_json = '{}';
+		}
+		
+		// Agregar billing_city y billing_state desde la orden
+		if ( $order ) {
+			$customer_data = json_decode( $customer_json, true );
+			$customer_data['city'] = $order->get_billing_city();
+			$customer_data['state'] = $order->get_billing_state();
+			$customer_json = json_encode( $customer_data );
 		}
 		
 		// Obtener stocks como string JSON
@@ -1056,7 +1068,8 @@ class Hoko_Admin {
 
 		// Obtener parámetros de la cotización
 		$stock_ids = isset( $_POST['stock_ids'] ) ? sanitize_text_field( $_POST['stock_ids'] ) : '';
-		$city_to = isset( $_POST['city_to'] ) ? absint( $_POST['city_to'] ) : 0;
+		$city = isset( $_POST['city'] ) ? sanitize_text_field( $_POST['city'] ) : '';
+		$state = isset( $_POST['state'] ) ? sanitize_text_field( $_POST['state'] ) : '';
 		$payment = isset( $_POST['payment'] ) ? absint( $_POST['payment'] ) : 0;
 		$declared_value = isset( $_POST['declared_value'] ) ? absint( $_POST['declared_value'] ) : 10000;
 		$width = isset( $_POST['width'] ) ? absint( $_POST['width'] ) : 10;
@@ -1066,7 +1079,7 @@ class Hoko_Admin {
 		$collection_value = isset( $_POST['collection_value'] ) ? absint( $_POST['collection_value'] ) : 150000;
 
 		// Validar parámetros requeridos
-		if ( ! $stock_ids || ! $city_to ) {
+		if ( ! $stock_ids || ! $city || ! $state ) {
 			wp_send_json_error( array( 'message' => __( 'Faltan parámetros requeridos para la cotización.', 'hoko-360' ) ) );
 		}
 
@@ -1088,7 +1101,8 @@ class Hoko_Admin {
 		// Preparar datos para la petición
 		$post_data = array(
 			'stock_ids' => $stock_ids,
-			'city_to' => $city_to,
+			'city' => $city,
+			'state' => $state,
 			'payment' => $payment,
 			'declared_value' => $declared_value,
 			'width' => $width,

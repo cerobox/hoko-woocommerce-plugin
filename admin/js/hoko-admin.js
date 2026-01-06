@@ -198,16 +198,35 @@
 			var $message = $('#hoko-confirm-message');
 			
 			// Obtener datos del formulario para la cotización
-			var cityTo = $('#customer_city_id').val();
+			var billingCity = $('#billing_city').val();
+			var billingState = $('#billing_state').val();
 			var payment = $('#payment').val();
+			var declaredValue = $('#declared_value').val() || 10000;
 			var height = $('#measures_height').val();
 			var width = $('#measures_width').val();
 			var length = $('#measures_length').val();
 			var weight = $('#measures_weight').val();
 			
+			// Calcular collection_value como la suma de (precio * cantidad) de todos los productos
+			var collectionValue = 0;
+			$('input[name*="[price]"]').each(function() {
+				var $priceInput = $(this);
+				var price = parseFloat($priceInput.val()) || 0;
+				
+				// Obtener el índice del producto
+				var name = $priceInput.attr('name');
+				var matches = name.match(/stocks\[(\d+)\]\[price\]/);
+				if (matches) {
+					var index = matches[1];
+					var $amountInput = $('input[name="stocks[' + index + '][amount]"]');
+					var amount = parseInt($amountInput.val()) || 0;
+					collectionValue += (price * amount);
+				}
+			});
+			
 			// Validar campos requeridos
-			if (!cityTo) {
-				showConfirmMessage('error', 'Por favor selecciona una ciudad de destino.');
+			if (!billingCity || !billingState) {
+				showConfirmMessage('error', 'No se encontró la ciudad y departamento de facturación.');
 				return;
 			}
 			
@@ -249,14 +268,15 @@
 					action: 'hoko_get_shipping_quotation',
 					nonce: hokoAdmin.nonce,
 					stock_ids: stockIds.join(','),
-					city_to: cityTo,
+					city: billingCity,
+					state: billingState,
 					payment: payment,
-					declared_value: 10000,
+					declared_value: declaredValue,
 					width: width,
 					height: height,
 					length: length,
 					weight: weight,
-					collection_value: 150000
+					collection_value: collectionValue
 				},
 				success: function(response) {
 					if (response.success) {
@@ -623,12 +643,12 @@
 		}
 
 		// Monitor form changes to reset quotation
-		$('#customer_state, #customer_city_id, #payment, #measures_height, #measures_width, #measures_length, #measures_weight').on('change', function() {
+		$('#customer_state, #customer_city_id, #declared_value, #payment, #measures_height, #measures_width, #measures_length, #measures_weight').on('change', function() {
 			resetQuotation();
 		});
 
 		// Monitor product quantity and price changes
-		$(document).on('change', 'input[name*="[quantity]"], input[name*="[price]"]', function() {
+		$(document).on('change', 'input[name*="[amount]"], input[name*="[price]"]', function() {
 			resetQuotation();
 		});
 

@@ -111,6 +111,8 @@ if ( $current_city_id && $cities ) {
                             ?>
                         </h3>
                         <input type="hidden" name="order_id" value="<?php echo esc_attr( $order->get_id() ); ?>">
+                        <input type="hidden" id="billing_city" value="<?php echo esc_attr( $billing_city ); ?>">
+                        <input type="hidden" id="billing_state" value="<?php echo esc_attr( $billing_state ); ?>">
 						<table class="form-table">
 							<tr>
 								<th scope="row"><label for="customer_name"><?php esc_html_e( 'Nombre', 'hoko-360' ); ?> <span class="required">*</span></label></th>
@@ -162,45 +164,6 @@ if ( $current_city_id && $cities ) {
 										value="<?php echo esc_attr( $order->get_meta( '_billing_document', true ) ?: '0000000000' ); ?>"
 										required
 									>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row"><label for="customer_state"><?php esc_html_e( 'Departamento', 'hoko-360' ); ?> <span class="required">*</span></label></th>
-								<td>
-									<select 
-										id="customer_state" 
-										name="customer[state_id]" 
-										class="regular-text" 
-										required
-									>
-										<option value=""><?php esc_html_e( 'Seleccionar...', 'hoko-360' ); ?></option>
-										<?php foreach ( $states as $state ) : ?>
-											<option value="<?php echo esc_attr( $state['state_id'] ); ?>" <?php echo ( $current_state_id == $state['state_id'] ) ? 'selected' : ''; ?>>
-												<?php echo esc_html( $state['state_name'] ); ?>
-											</option>
-										<?php endforeach; ?>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<th scope="row"><label for="customer_city_id"><?php esc_html_e( 'Ciudad', 'hoko-360' ); ?> <span class="required">*</span></label></th>
-								<td>
-									<select 
-										id="customer_city_id" 
-										name="customer[city_id]" 
-										class="regular-text" 
-										required
-									>
-										<option value=""><?php esc_html_e( 'Seleccionar ciudad...', 'hoko-360' ); ?></option>
-										<?php 
-										if ( $current_state_id && isset( $states_cities_map[$current_state_id] ) ) {
-											foreach ( $states_cities_map[$current_state_id] as $city ) {
-												$selected = ( $current_city_id == $city['city_id'] ) ? 'selected' : '';
-												echo '<option value="' . esc_attr( $city['city_id'] ) . '" ' . $selected . '>' . esc_html( $city['city_name'] ) . '</option>';
-											}
-										}
-										?>
-									</select>
 								</td>
 							</tr>
                             <tr>
@@ -307,6 +270,22 @@ if ( $current_city_id && $cities ) {
                     <!-- Configuración de envío -->
                     <div class="hoko-confirm-section">
                         <table class="form-table">
+                            <tr>
+                                <th scope="row"><label for="declared_value"><?php esc_html_e( 'Valor Declarado', 'hoko-360' ); ?> <span class="required">*</span></label></th>
+                                <td>
+                                    <input 
+                                        type="number" 
+                                        id="declared_value" 
+                                        name="declared_value" 
+                                        class="regular-text" 
+                                        value="10000" 
+                                        min="1" 
+                                        step="1"
+                                        required
+                                    >
+                                    <p class="description"><?php esc_html_e( 'Valor declarado del paquete para el seguro de envío.', 'hoko-360' ); ?></p>
+                                </td>
+                            </tr>
                             <tr>
                                 <th scope="row"><label for="payment"><?php esc_html_e( 'Método de Pago', 'hoko-360' ); ?></label></th>
                                 <td>
