@@ -163,17 +163,13 @@
 					nonce: hokoAdmin.nonce
 				},
 				success: function(response) {
-					// DEBUG: Mostrar respuesta completa en consola
-					console.log('═══════════════════════════════════════');
-					console.log('HOKO Refresh Token Response:', response);
-					console.log('═══════════════════════════════════════');
+					//console.log('HOKO Refresh Token Response:', response);
 
 					if (response.data && response.data.debug) {
-						console.log('📊 HOKO Debug Data:', response.data.debug);
+						//console.log('📊 HOKO Debug Data:', response.data.debug);
 					}
 
 					if (response.success) {
-						console.log('✅ Refresh exitoso');
 						showMessage('success', response.data.message);
 						// Actualizar la fecha de refresh en la UI
 						if (response.data.refresh_time) {
@@ -183,14 +179,10 @@
 							}
 						}
 					} else {
-						console.log('❌ Refresh falló');
-						
 						// Mensajes específicos según el tipo de error
 						if (response.data.no_credentials) {
-							console.log('⚠️ No hay credenciales guardadas. Sesión creada antes del sistema de refresh.');
 							showMessage('error', response.data.message + ' <br><br><strong>Nota:</strong> Esta sesión fue creada antes de implementar el refresh automático.');
 						} else if (response.data.credentials_invalid) {
-							console.log('⚠️ Credenciales inválidas. Posible cambio de contraseña en Hoko.');
 							showMessage('error', response.data.message);
 						} else {
 							showMessage('error', response.data.message);
