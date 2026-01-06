@@ -1218,10 +1218,6 @@ class Hoko_Admin {
 		$state = isset( $_POST['state'] ) ? sanitize_text_field( $_POST['state'] ) : '';
 		$payment = isset( $_POST['payment'] ) ? absint( $_POST['payment'] ) : 0;
 		$declared_value = isset( $_POST['declared_value'] ) ? absint( $_POST['declared_value'] ) : 10000;
-		$width = isset( $_POST['width'] ) ? absint( $_POST['width'] ) : 10;
-		$height = isset( $_POST['height'] ) ? absint( $_POST['height'] ) : 10;
-		$length = isset( $_POST['length'] ) ? absint( $_POST['length'] ) : 10;
-		$weight = isset( $_POST['weight'] ) ? floatval( $_POST['weight'] ) : 1;
 		$collection_value = isset( $_POST['collection_value'] ) ? absint( $_POST['collection_value'] ) : 150000;
 
 		// Validar parámetros requeridos

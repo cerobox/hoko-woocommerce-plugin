@@ -271,10 +271,6 @@
 			var billingState = $('#billing_state').val();
 			var payment = $('#payment').val();
 			var declaredValue = $('#declared_value').val() || 10000;
-			var height = $('#measures_height').val();
-			var width = $('#measures_width').val();
-			var length = $('#measures_length').val();
-			var weight = $('#measures_weight').val();
 			
 			// Calcular collection_value como la suma de (precio * cantidad) de todos los productos
 			var collectionValue = 0;
@@ -296,11 +292,6 @@
 			// Validar campos requeridos
 			if (!billingCity || !billingState) {
 				showConfirmMessage('error', 'No se encontró la ciudad y departamento de facturación.');
-				return;
-			}
-			
-			if (!height || !width || !length || !weight) {
-				showConfirmMessage('error', 'Por favor completa las medidas del paquete.');
 				return;
 			}
 			
@@ -341,10 +332,6 @@
 					state: billingState,
 					payment: payment,
 					declared_value: declaredValue,
-					width: width,
-					height: height,
-					length: length,
-					weight: weight,
 					collection_value: collectionValue
 				},
 				success: function(response) {

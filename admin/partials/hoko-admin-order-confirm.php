@@ -244,29 +244,6 @@ if ( $current_city_id && $cities ) {
 						</table>
 					</div>
 
-					<!-- Medidas del paquete -->
-					<div class="hoko-confirm-section">
-						<h3><?php esc_html_e( 'Medidas del paquete', 'hoko-360' ); ?></h3>
-						<ul class="measures">
-                            <li>
-                                <input type="number" id="measures_height" name="measures[height]" value="10" min="1" required>
-                                <label for="measures_height"><?php esc_html_e( 'Alto (CM)', 'hoko-360' ); ?></label>
-                            </li>
-                            <li>
-                                <input type="number" id="measures_width" name="measures[width]" value="10" min="1" required>
-                                <label for="measures_width"><?php esc_html_e( 'Ancho (CM)', 'hoko-360' ); ?></label>
-                            </li>
-                            <li>
-                                <input type="number" id="measures_length" name="measures[length]" value="10" min="1" required>
-                                <label for="measures_length"><?php esc_html_e( 'Largo (CM)', 'hoko-360' ); ?></label>
-                            </li>
-                            <li>
-                                <input type="number" id="measures_weight" name="measures[weight]" value="1" step="0.1" min="0.1" required>
-                                <label for="measures_weight"><?php esc_html_e( 'Peso (KG)', 'hoko-360' ); ?></label>
-                            </li>
-						</ul>
-					</div>
-
                     <!-- Configuración de envío -->
                     <div class="hoko-confirm-section">
                         <table class="form-table">
