@@ -1242,19 +1242,14 @@ class Hoko_Admin {
 		}
 
 		// Construir URL de la API
-		$api_url = $this->api_endpoints[ $country ]['base'] . '/member/stock/quotation';
+		$api_url = $this->api_endpoints[ $country ]['base'] . '/member/shopify-quotation';
 
 		// Preparar datos para la petición
 		$post_data = array(
 			'stock_ids' => $stock_ids,
-			'city' => $city,
-			'state' => $state,
+			'city_to' => $city.', '.$state,
 			'payment' => $payment,
 			'declared_value' => $declared_value,
-			'width' => $width,
-			'height' => $height,
-			'length' => $length,
-			'weight' => $weight,
 			'collection_value' => $collection_value
 		);
 
