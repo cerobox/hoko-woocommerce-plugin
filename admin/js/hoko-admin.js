@@ -52,7 +52,7 @@
 			return 'La dirección no puede exceder 200 caracteres.';
 		}
 
-		if (!customer.city_id || customer.city_id.trim() === '') {
+		if (!customer.city || customer.city.trim() === '') {
 			return 'La ciudad del cliente es requerida.';
 		}
 		
@@ -463,7 +463,7 @@
 				identification: $('#customer_identification').val().trim(),
 				phone: $('#customer_phone').val().trim(),
 				address: $('#customer_address').val().trim(),
-				city_id: cityFormatted
+				city: cityFormatted
 			};
 			
 			var validationError = validateCustomerFormat(customerData);
