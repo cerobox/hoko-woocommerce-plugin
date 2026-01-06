@@ -28,6 +28,7 @@ if ( ! defined( 'WPINC' ) ) {
 						$auth_email   = get_option( 'hoko_360_auth_email', '' );
 						$auth_country = get_option( 'hoko_360_auth_country', '' );
 						$auth_time    = get_option( 'hoko_360_auth_time', '' );
+						$token_refreshed = get_option( 'hoko_360_token_refreshed', '' );
 						
 						// Mapeo de países
 						$countries = array(
@@ -49,6 +50,13 @@ if ( ! defined( 'WPINC' ) ) {
 						if ( $auth_time ) {
 							/* translators: %s: fecha de autenticación */
 							printf( esc_html__( 'Autenticado el: %s', 'hoko-360' ), esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $auth_time ) ) );
+							echo '<br>';
+						}
+						if ( $token_refreshed ) {
+							/* translators: %s: fecha del último refresh del token */
+							echo '<span id="token-refresh-time">';
+							printf( esc_html__( 'Token refrescado: %s', 'hoko-360' ), esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $token_refreshed ) ) );
+							echo '</span>';
 						}
 						?>
 					</p>
@@ -57,6 +65,9 @@ if ( ! defined( 'WPINC' ) ) {
 				<p><?php esc_html_e( 'Ya tienes una sesión activa con Hoko.', 'hoko-360' ); ?></p>
 				
 				<p class="submit">
+					<button type="button" class="button button-primary" id="hoko-refresh-token-button">
+						<?php esc_html_e( 'Refrescar token', 'hoko-360' ); ?>
+					</button>
 					<button type="button" class="button button-secondary" id="hoko-logout-button">
 						<?php esc_html_e( 'Cerrar sesión', 'hoko-360' ); ?>
 					</button>

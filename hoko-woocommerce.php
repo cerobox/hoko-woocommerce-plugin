@@ -144,6 +144,7 @@ function hoko_360_run() {
 	// Hooks para manejar peticiones AJAX
 	add_action( 'wp_ajax_hoko_authenticate', array( $plugin_admin, 'handle_auth_request' ) );
 	add_action( 'wp_ajax_hoko_logout', array( $plugin_admin, 'handle_logout_request' ) );
+	add_action( 'wp_ajax_hoko_refresh_token', array( $plugin_admin, 'handle_refresh_token_request' ) );
 	add_action( 'wp_ajax_hoko_create_order', array( $plugin_admin, 'handle_create_order_request' ) );
 	add_action( 'wp_ajax_hoko_sync_cities', array( $plugin_admin, 'handle_sync_cities_request' ) );
 	add_action( 'wp_ajax_hoko_get_cities_by_state', array( $plugin_admin, 'handle_get_cities_by_state_request' ) );

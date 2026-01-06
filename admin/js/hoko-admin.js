@@ -140,6 +140,83 @@
 			});
 		});
 		
+		// Manejo del botón de refresh token
+		$('#hoko-refresh-token-button').on('click', function(e) {
+			e.preventDefault();
+			
+			var $button = $(this);
+			var $spinner = $button.siblings('.spinner');
+			var $message = $('#hoko-auth-message');
+			
+			// Deshabilitar botón y mostrar spinner
+			$button.prop('disabled', true);
+			$spinner.addClass('is-active');
+			$message.hide();
+			
+			// Realizar petición AJAX
+			$.ajax({
+				url: hokoAdmin.ajaxurl,
+				type: 'POST',
+				dataType: 'json',
+				data: {
+					action: 'hoko_refresh_token',
+					nonce: hokoAdmin.nonce
+				},
+				success: function(response) {
+					// DEBUG: Mostrar respuesta completa en consola
+					console.log('═══════════════════════════════════════');
+					console.log('HOKO Refresh Token Response:', response);
+					console.log('═══════════════════════════════════════');
+
+					if (response.data && response.data.debug) {
+						console.log('📊 HOKO Debug Data:', response.data.debug);
+					}
+
+					if (response.success) {
+						console.log('✅ Refresh exitoso');
+						showMessage('success', response.data.message);
+						// Actualizar la fecha de refresh en la UI
+						if (response.data.refresh_time) {
+							var $refreshTime = $('#token-refresh-time');
+							if ($refreshTime.length) {
+								$refreshTime.text('Token refrescado: ' + response.data.refresh_time);
+							}
+						}
+					} else {
+						console.log('❌ Refresh falló');
+						
+						// Mensajes específicos según el tipo de error
+						if (response.data.no_credentials) {
+							console.log('⚠️ No hay credenciales guardadas. Sesión creada antes del sistema de refresh.');
+							showMessage('error', response.data.message + ' <br><br><strong>Nota:</strong> Esta sesión fue creada antes de implementar el refresh automático.');
+						} else if (response.data.credentials_invalid) {
+							console.log('⚠️ Credenciales inválidas. Posible cambio de contraseña en Hoko.');
+							showMessage('error', response.data.message);
+						} else {
+							showMessage('error', response.data.message);
+						}
+						
+						// Si requiere re-autenticación, mostrar botón de logout
+						if (response.data.require_reauth) {
+							var $logoutBtn = $('#hoko-logout-button');
+							if ($logoutBtn.length) {
+								$logoutBtn.addClass('button-primary').removeClass('button-secondary');
+								$logoutBtn.text('Cerrar sesión y volver a autenticar');
+							}
+						}
+					}
+				},
+				error: function(xhr, status, error) {
+					showMessage('error', 'Error en la conexión: ' + error);
+				},
+				complete: function() {
+					// Rehabilitar botón y ocultar spinner
+					$button.prop('disabled', false);
+					$spinner.removeClass('is-active');
+				}
+			});
+		});
+		
 		// Manejo del botón de logout
 		$('#hoko-logout-button').on('click', function(e) {
 			e.preventDefault();
@@ -283,6 +360,12 @@
 						displayQuotationResults(response.data.quotations);
 					} else {
 						showConfirmMessage('error', response.data.message);
+						// Si requiere re-autenticación, redirigir a la página de auth
+						if (response.data.require_reauth) {
+							setTimeout(function() {
+								window.location.href = hokoAdmin.authPageUrl || 'admin.php?page=hoko-360-auth';
+							}, 2000);
+						}
 					}
 				},
 				error: function(xhr, status, error) {

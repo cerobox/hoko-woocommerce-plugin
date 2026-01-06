@@ -300,6 +300,39 @@ class Hoko_Admin {
 	}
 
 	/**
+	 * Encripta una cadena usando la clave de WordPress.
+	 *
+	 * @param string $value Valor a encriptar.
+	 * @return string Valor encriptado en base64.
+	 */
+	private function encrypt( $value ) {
+		if ( empty( $value ) ) {
+			return '';
+		}
+		$key = wp_salt( 'auth' );
+		$iv = openssl_random_pseudo_bytes( 16 );
+		$encrypted = openssl_encrypt( $value, 'AES-256-CBC', $key, 0, $iv );
+		return base64_encode( $iv . $encrypted );
+	}
+
+	/**
+	 * Desencripta una cadena usando la clave de WordPress.
+	 *
+	 * @param string $value Valor encriptado en base64.
+	 * @return string Valor desencriptado.
+	 */
+	private function decrypt( $value ) {
+		if ( empty( $value ) ) {
+			return '';
+		}
+		$key = wp_salt( 'auth' );
+		$data = base64_decode( $value );
+		$iv = substr( $data, 0, 16 );
+		$encrypted = substr( $data, 16 );
+		return openssl_decrypt( $encrypted, 'AES-256-CBC', $key, 0, $iv );
+	}
+
+	/**
 	 * Obtiene el token de autentificación guardado (con cache).
 	 *
 	 * @return string Token de autentificación o cadena vacía si no existe.
@@ -404,7 +437,7 @@ class Hoko_Admin {
 			);
 		}
 
-		$this->process_auth_response( $response, $country, $email );
+		$this->process_auth_response( $response, $country, $email, $password );
 	}
 
 	/**
@@ -472,26 +505,34 @@ class Hoko_Admin {
 	/**
 	 * Procesa respuesta de autentificación.
 	 */
-	private function process_auth_response( $response, $country, $email ) {
+	private function process_auth_response( $response, $country, $email, $password = '' ) {
 		$response_code = wp_remote_retrieve_response_code( $response );
 		$response_body = wp_remote_retrieve_body( $response );
 		$data          = json_decode( $response_body, true );
 
 		if ( $response_code === 200 && isset( $data['token'] ) ) {
+			$current_time = current_time( 'timestamp' );
+			
 			// Actualizar cache
 			$this->cached_token = sanitize_text_field( $data['token'] );
 			$this->cached_auth_data = array(
 				'token'   => $this->cached_token,
 				'country' => $country,
 				'email'   => $email,
-				'time'    => current_time( 'timestamp' )
+				'time'    => $current_time
 			);
 
 			// Guardar en base de datos
 			update_option( 'hoko_360_auth_token', $this->cached_token );
 			update_option( 'hoko_360_auth_country', $country );
 			update_option( 'hoko_360_auth_email', $email );
-			update_option( 'hoko_360_auth_time', $this->cached_auth_data['time'] );
+			update_option( 'hoko_360_auth_time', $current_time );
+			update_option( 'hoko_360_token_refreshed', $current_time );
+			
+			// Guardar contraseña encriptada para refresh automático (solo si se proporciona)
+			if ( ! empty( $password ) ) {
+				update_option( 'hoko_360_auth_pass', $this->encrypt( $password ) );
+			}
 
 			wp_send_json_success(
 				array(
@@ -502,6 +543,111 @@ class Hoko_Admin {
 		} else {
 			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error en la autentificación.', 'hoko-360' );
 			wp_send_json_error( array( 'message' => $error_message ) );
+		}
+	}
+
+	/**
+	 * Refresca el token de autentificación usando credenciales guardadas.
+	 *
+	 * @return bool True si el refresh fue exitoso, false en caso contrario.
+	 */
+	private function refresh_token() {
+		$email = get_option( 'hoko_360_auth_email', '' );
+		$encrypted_password = get_option( 'hoko_360_auth_pass', '' );
+		$country = get_option( 'hoko_360_auth_country', 'colombia' );
+
+		if ( empty( $email ) || empty( $encrypted_password ) ) {
+			return false;
+		}
+
+		$password = $this->decrypt( $encrypted_password );
+		if ( empty( $password ) ) {
+			return false;
+		}
+
+		// Realizar petición de login
+		$response = $this->make_api_request( $this->get_api_endpoint( $country ), array(
+			'email'    => $email,
+			'password' => $password,
+		) );
+
+		if ( is_wp_error( $response ) ) {
+			return false;
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$response_body = wp_remote_retrieve_body( $response );
+		$data = json_decode( $response_body, true );
+
+		if ( $response_code === 200 && isset( $data['token'] ) ) {
+			$current_time = current_time( 'timestamp' );
+			
+			// Actualizar token y cache
+			$this->cached_token = sanitize_text_field( $data['token'] );
+			$this->cached_auth_data = array(
+				'token'   => $this->cached_token,
+				'country' => $country,
+				'email'   => $email,
+				'time'    => get_option( 'hoko_360_auth_time', $current_time )
+			);
+
+			update_option( 'hoko_360_auth_token', $this->cached_token );
+			update_option( 'hoko_360_token_refreshed', $current_time );
+
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Maneja la petición AJAX para refrescar el token manualmente.
+	 */
+	public function handle_refresh_token_request() {
+		$this->verify_ajax_request();
+
+		// Verificar si existe contraseña guardada
+		$has_encrypted_pass = ! empty( get_option( 'hoko_360_auth_pass', '' ) );
+		
+		// DEBUG: Mostrar datos antes del refresh
+		$debug_data = array(
+			'email' => get_option( 'hoko_360_auth_email', '' ),
+			'has_encrypted_pass' => $has_encrypted_pass,
+			'country' => get_option( 'hoko_360_auth_country', 'colombia' ),
+		);
+
+		// Si no hay contraseña guardada, solicitar re-autenticación completa
+		if ( ! $has_encrypted_pass ) {
+			wp_send_json_error(
+				array(
+					'message' => __( 'No se puede refrescar el token automáticamente. Por favor, cierra sesión e inicia sesión nuevamente para habilitar el refresh automático.', 'hoko-360' ),
+					'require_reauth' => true,
+					'no_credentials' => true,
+					'debug' => $debug_data,
+				)
+			);
+			return;
+		}
+
+		// Intentar refresh con credenciales guardadas
+		if ( $this->refresh_token() ) {
+			$refresh_time = get_option( 'hoko_360_token_refreshed', current_time( 'timestamp' ) );
+			wp_send_json_success(
+				array(
+					'message' => __( 'Token refrescado exitosamente.', 'hoko-360' ),
+					'refresh_time' => date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $refresh_time ),
+					'debug' => $debug_data,
+				)
+			);
+		} else {
+			wp_send_json_error(
+				array(
+					'message' => __( 'No se pudo refrescar el token. Es posible que hayas cambiado tu contraseña en Hoko. Por favor, cierra sesión e inicia sesión nuevamente.', 'hoko-360' ),
+					'require_reauth' => true,
+					'credentials_invalid' => true,
+					'debug' => $debug_data,
+				)
+			);
 		}
 	}
 
@@ -1137,7 +1283,75 @@ class Hoko_Admin {
 
 		// Verificar código de estado
 		if ( $status_code !== 200 ) {
-			wp_send_json_error( array( 'message' => __( 'Error en la respuesta de la API. Código: ', 'hoko-360' ) . $status_code ) );
+			$error_data = json_decode( $response_body, true );
+			
+			// Si el error es INVALID_TOKEN, intentar refrescar el token y reintentar
+			if ( $error_data && isset( $error_data['code'] ) && $error_data['code'] === 'INVALID_TOKEN' ) {
+				// Verificar si hay credenciales guardadas antes de intentar refresh
+				$has_encrypted_pass = ! empty( get_option( 'hoko_360_auth_pass', '' ) );
+				
+				if ( ! $has_encrypted_pass ) {
+					// No hay credenciales guardadas, no se puede hacer refresh automático
+					wp_send_json_error( array( 
+						'message' => __( 'Tu sesión ha expirado y no se puede refrescar automáticamente. Por favor, cierra sesión e inicia sesión nuevamente para habilitar el refresh automático de tokens.', 'hoko-360' ),
+						'require_reauth' => true,
+						'no_credentials' => true
+					) );
+					return;
+				}
+				
+				// Intentar refresh automático
+				if ( $this->refresh_token() ) {
+					// Reintentar la petición con el nuevo token
+					$token = $this->get_auth_token();
+					$response = wp_remote_post(
+						$api_url,
+						array(
+							'method' => 'POST',
+							'headers' => array(
+								'Authorization' => 'Bearer ' . $token,
+								'Content-Type' => 'application/json',
+							),
+							'body' => json_encode( $post_data ),
+							'timeout' => 30,
+						)
+					);
+					
+					if ( ! is_wp_error( $response ) ) {
+						$status_code = wp_remote_retrieve_response_code( $response );
+						$response_body = wp_remote_retrieve_body( $response );
+						
+						// Si ahora funciona, continuar con el flujo normal
+						if ( $status_code === 200 ) {
+							$data = json_decode( $response_body, true );
+							if ( $data && isset( $data['status'] ) && $data['status'] === 'success' && isset( $data['quotations'] ) ) {
+								wp_send_json_success( array( 'quotations' => $data['quotations'] ) );
+								return;
+							}
+						}
+					}
+				}
+				
+				// Si el refresh falló o el reintento falló, pedir re-autenticación
+				wp_send_json_error( array( 
+					'message' => __( 'Tu sesión ha expirado. Es posible que hayas cambiado tu contraseña en Hoko. Por favor, cierra sesión e inicia sesión nuevamente.', 'hoko-360' ),
+					'require_reauth' => true,
+					'credentials_invalid' => true
+				) );
+				return;
+			}
+			
+			// Para otros errores, mostrar el mensaje de error
+			$error_message = __( 'Error en la respuesta de la API. Código: ', 'hoko-360' ) . $status_code;
+			
+			if ( $error_data && isset( $error_data['message'] ) ) {
+				$error_message = $error_data['message'];
+				if ( isset( $error_data['code'] ) ) {
+					$error_message .= ' (' . $error_data['code'] . ')';
+				}
+			}
+			
+			wp_send_json_error( array( 'message' => $error_message ) );
 		}
 
 		// Decodificar respuesta JSON
@@ -1179,6 +1393,8 @@ class Hoko_Admin {
 		delete_option( 'hoko_360_auth_country' );
 		delete_option( 'hoko_360_auth_email' );
 		delete_option( 'hoko_360_auth_time' );
+		delete_option( 'hoko_360_auth_pass' );
+		delete_option( 'hoko_360_token_refreshed' );
 
 		wp_send_json_success(
 			array(
