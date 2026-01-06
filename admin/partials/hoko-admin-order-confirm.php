@@ -140,6 +140,19 @@ if ( $current_city_id && $cities ) {
                                     >
                                 </td>
                             </tr>
+                            <tr>
+                                <th scope="row"><label for="customer_address"><?php esc_html_e( 'Dirección', 'hoko-360' ); ?> <span class="required">*</span></label></th>
+                                <td>
+                                    <input
+                                            type="text"
+                                            id="customer_address"
+                                            class="regular-text"
+                                            name="customer[address]"
+                                            value="<?php echo esc_attr( $order->get_billing_address_1() . ( $order->get_billing_address_2() ? ' ' . $order->get_billing_address_2() : '' ) ); ?>"
+                                            required
+                                    >
+                                </td>
+                            </tr>
 							<tr>
 								<th scope="row"><label for="customer_email"><?php esc_html_e( 'Email', 'hoko-360' ); ?></label></th>
 								<td>
@@ -166,19 +179,6 @@ if ( $current_city_id && $cities ) {
 									>
 								</td>
 							</tr>
-                            <tr>
-                                <th scope="row"><label for="customer_address"><?php esc_html_e( 'Dirección', 'hoko-360' ); ?> <span class="required">*</span></label></th>
-                                <td>
-                                    <input
-                                            type="text"
-                                            id="customer_address"
-                                            class="regular-text"
-                                            name="customer[address]"
-                                            value="<?php echo esc_attr( $order->get_billing_address_1() . ( $order->get_billing_address_2() ? ' ' . $order->get_billing_address_2() : '' ) ); ?>"
-                                            required
-                                    >
-                                </td>
-                            </tr>
 						</table>
 					</div>
 
@@ -191,7 +191,6 @@ if ( $current_city_id && $cities ) {
 									<th><?php esc_html_e( 'SKU', 'hoko-360' ); ?></th>
 									<th><?php esc_html_e( 'Cantidad', 'hoko-360' ); ?></th>
 									<th><?php esc_html_e( 'Precio Unitario', 'hoko-360' ); ?></th>
-									<th><?php esc_html_e( 'Total', 'hoko-360' ); ?></th>
 								</tr>
 							</thead>
 							<tbody>
@@ -214,27 +213,13 @@ if ( $current_city_id && $cities ) {
 										</td>
 										<td><?php echo esc_html( $sku ); ?></td>
 										<td>
-											<input 
-												type="number" 
-												name="stocks[<?php echo esc_attr( $item_index ); ?>][amount]" 
-												class="small-text" 
-												value="<?php echo esc_attr( $quantity ); ?>"
-												min="1"
-												required
-											>
+											<?php echo esc_html( $quantity ); ?>
+											<input type="hidden" name="stocks[<?php echo esc_attr( $item_index ); ?>][amount]" value="<?php echo esc_attr( $quantity ); ?>">
 										</td>
 										<td>
-											<input 
-												type="number" 
-												name="stocks[<?php echo esc_attr( $item_index ); ?>][price]" 
-												class="regular-text" 
-												value="<?php echo esc_attr( number_format( $unit_price, 2, '.', '' ) ); ?>"
-												step="0.01"
-												min="0"
-												required
-											>
+											<?php echo esc_html( number_format( $unit_price, 2, '.', '' ) ); ?>
+											<input type="hidden" name="stocks[<?php echo esc_attr( $item_index ); ?>][price]" value="<?php echo esc_attr( number_format( $unit_price, 2, '.', '' ) ); ?>">
 										</td>
-										<td><?php echo wp_kses_post( wc_price( $item->get_total() ) ); ?></td>
 									</tr>
 								<?php 
 									$item_index++;
