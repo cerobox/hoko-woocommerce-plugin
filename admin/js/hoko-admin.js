@@ -51,12 +51,9 @@
 		if (customer.address.length > 200) {
 			return 'La dirección no puede exceder 200 caracteres.';
 		}
-		
+
 		if (!customer.city_id || customer.city_id.trim() === '') {
 			return 'La ciudad del cliente es requerida.';
-		}
-		if (!/^\d+$/.test(customer.city_id)) {
-			return 'El ID de la ciudad debe ser un valor numérico.';
 		}
 		
 		return null;
@@ -448,13 +445,25 @@
 			}
 			
 			// Validar formato del objeto customer
+			var billingCity = $('#billing_city').val().trim();
+			var billingState = $('#billing_state').val().trim();
+			var cityFormatted = '';
+			
+			if (billingCity && billingState) {
+				cityFormatted = billingCity + ', ' + billingState;
+			} else if (billingCity) {
+				cityFormatted = billingCity;
+			} else if (billingState) {
+				cityFormatted = billingState;
+			}
+			
 			var customerData = {
 				name: $('#customer_name').val().trim(),
 				email: $('#customer_email').val().trim(),
 				identification: $('#customer_identification').val().trim(),
 				phone: $('#customer_phone').val().trim(),
 				address: $('#customer_address').val().trim(),
-				city_id: $('#customer_city_id').val().trim()
+				city_id: cityFormatted
 			};
 			
 			var validationError = validateCustomerFormat(customerData);
@@ -466,15 +475,6 @@
 			// Formatear el customer según el formato exacto de la API
 			var formattedCustomer = formatCustomerForAPI(customerData);
 			var customerJSON = JSON.stringify(formattedCustomer);
-			
-			// Construir measures como JSON string
-			var measuresData = {
-				height: $('#measures_height').val() || '10',
-				width: $('#measures_width').val() || '10',
-				length: $('#measures_length').val() || '10',
-				weight: $('#measures_weight').val() || '1'
-			};
-			var measuresJSON = JSON.stringify(measuresData);
 			
 			// Construir stocks como JSON string
 			var stocksData = {};
@@ -515,11 +515,10 @@
 			formDataParts.push('action=' + encodeURIComponent('hoko_create_order'));
 			formDataParts.push('nonce=' + encodeURIComponent(hokoAdmin.nonce));
 			formDataParts.push('customer=' + encodeURIComponent(customerJSON));
-			formDataParts.push('measures=' + encodeURIComponent(measuresJSON));
 			formDataParts.push('stocks=' + encodeURIComponent(stocksJSON));
 			
-			// Agregar otros campos del formulario (excluyendo customer, measures y stocks)
-			var $formInputs = $form.find('input, select, textarea').not('[name^="customer["]').not('[name^="measures["]').not('[name^="stocks["]');
+			// Agregar otros campos del formulario (excluyendo customer, measures, stocks, billing_city y billing_state)
+			var $formInputs = $form.find('input, select, textarea').not('[name^="customer["]').not('[name^="measures["]').not('[name^="stocks["]').not('#billing_city').not('#billing_state');
 			$formInputs.each(function() {
 				var $input = $(this);
 				var name = $input.attr('name');

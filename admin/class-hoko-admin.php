@@ -676,7 +676,7 @@ class Hoko_Admin {
 		// Preparar datos y realizar petición
 		$hoko_data = $this->prepare_order_data_from_form();
 		$auth_data = $this->get_auth_data();
-		$api_url = $this->get_api_base_url( $auth_data['country'] ) . '/member/order/create';
+		$api_url = $this->get_api_base_url( $auth_data['country'] ) . '/member/ecommerce-create-order';
 
 		$response = $this->make_api_request( $api_url, $hoko_data, $auth_data['token'] );
 
@@ -784,33 +784,6 @@ class Hoko_Admin {
 			'contain'     => isset( $_POST['contain'] ) ? sanitize_text_field( $_POST['contain'] ) : '',
 			'measures'    => $measures_json,
 			'external_id' => isset( $_POST['order_id'] ) ? sanitize_text_field( $_POST['order_id'] ) : '',
-		);
-	}
-
-	/**
-	 * Sanitiza datos del cliente.
-	 */
-	private function sanitize_customer_data( $customer_data ) {
-		if ( is_string( $customer_data ) ) {
-			$decoded_data = json_decode( $customer_data, true );
-			if ( json_last_error() === JSON_ERROR_NONE && is_array( $decoded_data ) ) {
-				$customer_data = $decoded_data;
-			} else {
-				$customer_data = array();
-			}
-		}
-		
-		if ( ! is_array( $customer_data ) ) {
-			$customer_data = array();
-		}
-		
-		return array(
-			'name'           => isset( $customer_data['name'] ) ? sanitize_text_field( $customer_data['name'] ) : '',
-			'email'          => isset( $customer_data['email'] ) ? sanitize_email( $customer_data['email'] ) : '',
-			'identification' => isset( $customer_data['identification'] ) ? sanitize_text_field( $customer_data['identification'] ) : '',
-			'phone'          => isset( $customer_data['phone'] ) ? sanitize_text_field( $customer_data['phone'] ) : '',
-			'address'        => isset( $customer_data['address'] ) ? sanitize_text_field( $customer_data['address'] ) : '',
-			'city_id'        => isset( $customer_data['city_id'] ) ? sanitize_text_field( $customer_data['city_id'] ) : '1',
 		);
 	}
 
@@ -1238,7 +1211,7 @@ class Hoko_Admin {
 		}
 
 		// Construir URL de la API
-		$api_url = $this->api_endpoints[ $country ]['base'] . '/member/shopify-quotation';
+		$api_url = $this->api_endpoints[ $country ]['base'] . '/member/ecommerce-quotation';
 
 		// Preparar datos para la petición
 		$post_data = array(
