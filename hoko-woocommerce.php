@@ -10,7 +10,7 @@
  * Author URI:        https://github.com/cerobox
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       hoko-360
+ * Text Domain:       hoko-woocommerce-plugin
  * Domain Path:       /languages
  * Requires Plugins:  woocommerce
  *
@@ -29,7 +29,7 @@ function hoko_360_activate() {
 	// Verificar si WooCommerce está activo
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		wp_die( 
-			esc_html__( 'Este plugin requiere WooCommerce. Por favor instala y activa WooCommerce primero.', 'hoko-360' ) 
+			esc_html__( 'Este plugin requiere WooCommerce. Por favor instala y activa WooCommerce primero.', 'hoko-woocommerce-plugin' ) 
 		);
 	}
 	
@@ -95,7 +95,7 @@ require_once plugin_dir_path( __FILE__ ) . 'admin/class-hoko-admin.php';
  * Inicializar el plugin.
  */
 function hoko_360_run() {
-	$plugin_name = 'hoko-360';
+	$plugin_name = 'hoko-woocommerce-plugin';
 	$version     = '1.0.0';
 	
 	$plugin_admin = new Hoko_Admin( $plugin_name, $version );
