@@ -124,8 +124,8 @@ class Hoko_Admin {
 
 		// Menú principal (apunta a Órdenes de compra)
 		add_menu_page(
-			__( 'Hoko', 'hoko-woocommerce-plugin' ),           // Título de la página
-			__( 'Hoko', 'hoko-woocommerce-plugin' ),           // Título del menú
+			__( 'Hoko', 'hoko-woocommerce' ),           // Título de la página
+			__( 'Hoko', 'hoko-woocommerce' ),           // Título del menú
 			'manage_options',                        // Capacidad requerida
 			'hoko-360-orders',                       // Slug del menú (apunta a órdenes)
 			array( $this, 'display_orders_page' ),  // Función callback
@@ -136,8 +136,8 @@ class Hoko_Admin {
 		// Submenú: Órdenes de compra (primera opción)
 		add_submenu_page(
 			'hoko-360-orders',                        // Slug del menú padre
-			__( 'Órdenes de compra', 'hoko-woocommerce-plugin' ),  // Título de la página
-			__( 'Órdenes de compra', 'hoko-woocommerce-plugin' ),  // Título del submenú
+			__( 'Órdenes de compra', 'hoko-woocommerce' ),  // Título de la página
+			__( 'Órdenes de compra', 'hoko-woocommerce' ),  // Título del submenú
 			'manage_options',                        // Capacidad requerida
 			'hoko-360-orders',                       // Slug (mismo que el padre para que sea la primera opción)
 			array( $this, 'display_orders_page' )   // Función callback
@@ -147,8 +147,8 @@ class Hoko_Admin {
 		// Submenú: Iniciar sesión
 		add_submenu_page(
 			'hoko-360-orders',                        // Slug del menú padre
-			__( 'Iniciar sesión', 'hoko-woocommerce-plugin' ),     // Título de la página
-			__( 'Iniciar sesión', 'hoko-woocommerce-plugin' ),     // Título del submenú
+			__( 'Iniciar sesión', 'hoko-woocommerce' ),     // Título de la página
+			__( 'Iniciar sesión', 'hoko-woocommerce' ),     // Título del submenú
 			'manage_options',                        // Capacidad requerida
 			'hoko-360-auth',                         // Slug del submenú
 			array( $this, 'display_auth_page' )     // Función callback
@@ -157,8 +157,8 @@ class Hoko_Admin {
 		// Submenú oculto: Confirmar orden
 		add_submenu_page(
 			null,                                    // Sin menú padre (oculto)
-			__( 'Confirmar Orden', 'hoko-woocommerce-plugin' ),    // Título de la página
-			__( 'Confirmar Orden', 'hoko-woocommerce-plugin' ),    // Título del submenú
+			__( 'Confirmar Orden', 'hoko-woocommerce' ),    // Título de la página
+			__( 'Confirmar Orden', 'hoko-woocommerce' ),    // Título del submenú
 			'manage_options',                        // Capacidad requerida
 			'hoko-360-order-confirm',                // Slug del submenú
 			array( $this, 'display_order_confirm_page' ) // Función callback
@@ -420,7 +420,7 @@ class Hoko_Admin {
 		check_ajax_referer( 'hoko_auth_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'No tienes permisos para realizar esta acción.', 'hoko-woocommerce-plugin' ) ) );
+			wp_send_json_error( array( 'message' => __( 'No tienes permisos para realizar esta acción.', 'hoko-woocommerce' ) ) );
 		}
 	}
 
@@ -446,7 +446,7 @@ class Hoko_Admin {
 		if ( is_wp_error( $response ) ) {
 			wp_send_json_error(
 				array(
-					'message' => __( 'Error al conectar con el servidor: ', 'hoko-woocommerce-plugin' ) . $response->get_error_message(),
+					'message' => __( 'Error al conectar con el servidor: ', 'hoko-woocommerce' ) . $response->get_error_message(),
 				)
 			);
 		}
@@ -459,15 +459,15 @@ class Hoko_Admin {
 	 */
 	private function validate_auth_data( $email, $password, $country ) {
 		if ( empty( $email ) || empty( $password ) || empty( $country ) ) {
-			wp_send_json_error( array( 'message' => __( 'Por favor completa todos los campos.', 'hoko-woocommerce-plugin' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Por favor completa todos los campos.', 'hoko-woocommerce' ) ) );
 		}
 
 		if ( ! is_email( $email ) ) {
-			wp_send_json_error( array( 'message' => __( 'Por favor ingresa un email válido.', 'hoko-woocommerce-plugin' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Por favor ingresa un email válido.', 'hoko-woocommerce' ) ) );
 		}
 
 		if ( ! in_array( $country, array_keys( $this->api_endpoints ), true ) ) {
-			wp_send_json_error( array( 'message' => __( 'País no válido.', 'hoko-woocommerce-plugin' ) ) );
+			wp_send_json_error( array( 'message' => __( 'País no válido.', 'hoko-woocommerce' ) ) );
 		}
 	}
 
@@ -550,12 +550,12 @@ class Hoko_Admin {
 
 			wp_send_json_success(
 				array(
-					'message' => __( 'Autentificación exitosa.', 'hoko-woocommerce-plugin' ),
+					'message' => __( 'Autentificación exitosa.', 'hoko-woocommerce' ),
 					'data'    => $data,
 				)
 			);
 		} else {
-			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error en la autentificación.', 'hoko-woocommerce-plugin' );
+			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error en la autentificación.', 'hoko-woocommerce' );
 			wp_send_json_error( array( 'message' => $error_message ) );
 		}
 	}
@@ -634,7 +634,7 @@ class Hoko_Admin {
 		if ( ! $has_encrypted_pass ) {
 			wp_send_json_error(
 				array(
-					'message' => __( 'No se puede refrescar el token automáticamente. Por favor, cierra sesión e inicia sesión nuevamente para habilitar el refresh automático.', 'hoko-woocommerce-plugin' ),
+					'message' => __( 'No se puede refrescar el token automáticamente. Por favor, cierra sesión e inicia sesión nuevamente para habilitar el refresh automático.', 'hoko-woocommerce' ),
 					'require_reauth' => true,
 					'no_credentials' => true,
 					'debug' => $debug_data,
@@ -648,7 +648,7 @@ class Hoko_Admin {
 			$refresh_time = get_option( 'hoko_360_token_refreshed', current_time( 'timestamp' ) );
 			wp_send_json_success(
 				array(
-					'message' => __( 'Token refrescado exitosamente.', 'hoko-woocommerce-plugin' ),
+					'message' => __( 'Token refrescado exitosamente.', 'hoko-woocommerce' ),
 					'refresh_time' => date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $refresh_time ),
 					'debug' => $debug_data,
 				)
@@ -656,7 +656,7 @@ class Hoko_Admin {
 		} else {
 			wp_send_json_error(
 				array(
-					'message' => __( 'No se pudo refrescar el token. Es posible que hayas cambiado tu contraseña en Hoko. Por favor, cierra sesión e inicia sesión nuevamente.', 'hoko-woocommerce-plugin' ),
+					'message' => __( 'No se pudo refrescar el token. Es posible que hayas cambiado tu contraseña en Hoko. Por favor, cierra sesión e inicia sesión nuevamente.', 'hoko-woocommerce' ),
 					'require_reauth' => true,
 					'credentials_invalid' => true,
 					'debug' => $debug_data,
@@ -675,18 +675,18 @@ class Hoko_Admin {
 
 		// Verificar autenticación
 		if ( ! $this->is_authenticated() ) {
-			wp_send_json_error( array( 'message' => __( 'No estás autenticado.', 'hoko-woocommerce-plugin' ) ) );
+			wp_send_json_error( array( 'message' => __( 'No estás autenticado.', 'hoko-woocommerce' ) ) );
 		}
 
 		// Validar y obtener orden
 		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
 		if ( ! $order_id ) {
-			wp_send_json_error( array( 'message' => __( 'ID de orden no válido.', 'hoko-woocommerce-plugin' ) ) );
+			wp_send_json_error( array( 'message' => __( 'ID de orden no válido.', 'hoko-woocommerce' ) ) );
 		}
 
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
-			wp_send_json_error( array( 'message' => __( 'Orden no encontrada.', 'hoko-woocommerce-plugin' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Orden no encontrada.', 'hoko-woocommerce' ) ) );
 		}
 
 		// Verificar si la orden ya fue sincronizada con Hoko
@@ -704,7 +704,7 @@ class Hoko_Admin {
 				array(
 					'message' => sprintf(
 						/* translators: %s: Hoko order ID */
-						__( 'Esta orden ya fue creada en Hoko con el ID: %s. No se puede crear nuevamente.', 'hoko-woocommerce-plugin' ),
+						__( 'Esta orden ya fue creada en Hoko con el ID: %s. No se puede crear nuevamente.', 'hoko-woocommerce' ),
 						$sync_data->hoko_order_id
 					),
 				)
@@ -722,7 +722,7 @@ class Hoko_Admin {
 			$this->save_order_sync_status( $order_id, 2, $response->get_error_message(), null, $auth_data['country'] );
 			wp_send_json_error(
 				array(
-					'message' => __( 'Error al conectar con Hoko: ', 'hoko-woocommerce-plugin' ) . $response->get_error_message(),
+					'message' => __( 'Error al conectar con Hoko: ', 'hoko-woocommerce' ) . $response->get_error_message(),
 				)
 			);
 		}
@@ -740,17 +740,17 @@ class Hoko_Admin {
 
 		if ( $response_code === 200 || $response_code === 201 ) {
 			$hoko_order_id = isset( $data['id'] ) ? $data['id'] : ( isset( $data['order_id'] ) ? $data['order_id'] : null );
-			$this->save_order_sync_status( $order_id, 1, __( 'Orden creada exitosamente.', 'hoko-woocommerce-plugin' ), $hoko_order_id, $country );
+			$this->save_order_sync_status( $order_id, 1, __( 'Orden creada exitosamente.', 'hoko-woocommerce' ), $hoko_order_id, $country );
 			
 			wp_send_json_success(
 				array(
 					/* translators: %s: Hoko order ID */
-					'message' => sprintf( __( 'Orden creada exitosamente en Hoko. ID: %s', 'hoko-woocommerce-plugin' ), $hoko_order_id ),
+					'message' => sprintf( __( 'Orden creada exitosamente en Hoko. ID: %s', 'hoko-woocommerce' ), $hoko_order_id ),
 					'data'    => $data,
 				)
 			);
 		} else {
-			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error al crear la orden.', 'hoko-woocommerce-plugin' );
+			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error al crear la orden.', 'hoko-woocommerce' );
 			$this->save_order_sync_status( $order_id, 2, $error_message, null, $country );
 			wp_send_json_error( array( 'message' => $error_message ) );
 		}
@@ -982,7 +982,7 @@ class Hoko_Admin {
 
 		// Validar parámetros requeridos
 		if ( ! $stock_ids || ! $city || ! $state ) {
-			wp_send_json_error( array( 'message' => __( 'Faltan parámetros requeridos para la cotización.', 'hoko-woocommerce-plugin' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Faltan parámetros requeridos para la cotización.', 'hoko-woocommerce' ) ) );
 		}
 
 		// Verificar si la orden ya fue sincronizada con Hoko
@@ -1001,7 +1001,7 @@ class Hoko_Admin {
 					array(
 						'message' => sprintf(
 							/* translators: %s: Hoko order ID */
-							__( 'Esta orden ya fue creada en Hoko con el ID: %s. No se puede cotizar nuevamente.', 'hoko-woocommerce-plugin' ),
+							__( 'Esta orden ya fue creada en Hoko con el ID: %s. No se puede cotizar nuevamente.', 'hoko-woocommerce' ),
 							$sync_data->hoko_order_id
 						),
 					)
@@ -1012,13 +1012,13 @@ class Hoko_Admin {
 		// Obtener token de autentificación
 		$token = $this->get_auth_token();
 		if ( ! $token ) {
-			wp_send_json_error( array( 'message' => __( 'No estás autenticado. Por favor inicia sesión nuevamente.', 'hoko-woocommerce-plugin' ) ) );
+			wp_send_json_error( array( 'message' => __( 'No estás autenticado. Por favor inicia sesión nuevamente.', 'hoko-woocommerce' ) ) );
 		}
 
 		// Obtener país configurado
 		$country = get_option( 'hoko_360_auth_country', 'colombia' );
 		if ( ! isset( $this->api_endpoints[ $country ] ) ) {
-			wp_send_json_error( array( 'message' => __( 'País no configurado correctamente.', 'hoko-woocommerce-plugin' ) ) );
+			wp_send_json_error( array( 'message' => __( 'País no configurado correctamente.', 'hoko-woocommerce' ) ) );
 		}
 
 		// Construir URL de la API
@@ -1049,7 +1049,7 @@ class Hoko_Admin {
 
 		// Verificar si hay error en la petición
 		if ( is_wp_error( $response ) ) {
-			wp_send_json_error( array( 'message' => __( 'Error al conectar con la API de Hoko: ', 'hoko-woocommerce-plugin' ) . $response->get_error_message() ) );
+			wp_send_json_error( array( 'message' => __( 'Error al conectar con la API de Hoko: ', 'hoko-woocommerce' ) . $response->get_error_message() ) );
 		}
 
 		// Obtener código de estado y cuerpo de la respuesta
@@ -1068,7 +1068,7 @@ class Hoko_Admin {
 				if ( ! $has_encrypted_pass ) {
 					// No hay credenciales guardadas, no se puede hacer refresh automático
 					wp_send_json_error( array( 
-						'message' => __( 'Tu sesión ha expirado y no se puede refrescar automáticamente. Por favor, cierra sesión e inicia sesión nuevamente para habilitar el refresh automático de tokens.', 'hoko-woocommerce-plugin' ),
+						'message' => __( 'Tu sesión ha expirado y no se puede refrescar automáticamente. Por favor, cierra sesión e inicia sesión nuevamente para habilitar el refresh automático de tokens.', 'hoko-woocommerce' ),
 						'require_reauth' => true,
 						'no_credentials' => true
 					) );
@@ -1109,7 +1109,7 @@ class Hoko_Admin {
 				
 				// Si el refresh falló o el reintento falló, pedir re-autenticación
 				wp_send_json_error( array( 
-					'message' => __( 'Tu sesión ha expirado. Es posible que hayas cambiado tu contraseña en Hoko. Por favor, cierra sesión e inicia sesión nuevamente.', 'hoko-woocommerce-plugin' ),
+					'message' => __( 'Tu sesión ha expirado. Es posible que hayas cambiado tu contraseña en Hoko. Por favor, cierra sesión e inicia sesión nuevamente.', 'hoko-woocommerce' ),
 					'require_reauth' => true,
 					'credentials_invalid' => true
 				) );
@@ -1117,7 +1117,7 @@ class Hoko_Admin {
 			}
 			
 			// Para otros errores, mostrar el mensaje de error
-			$error_message = __( 'Error en la respuesta de la API. Código: ', 'hoko-woocommerce-plugin' ) . $status_code;
+			$error_message = __( 'Error en la respuesta de la API. Código: ', 'hoko-woocommerce' ) . $status_code;
 			
 			if ( $error_data && isset( $error_data['message'] ) ) {
 				$error_message = $error_data['message'];
@@ -1132,23 +1132,23 @@ class Hoko_Admin {
 		// Decodificar respuesta JSON
 		$data = json_decode( $response_body, true );
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
-			wp_send_json_error( array( 'message' => __( 'Error al procesar la respuesta de la API.', 'hoko-woocommerce-plugin' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Error al procesar la respuesta de la API.', 'hoko-woocommerce' ) ) );
 		}
 
 		// Verificar si la respuesta es exitosa
 		if ( ! isset( $data['status'] ) || $data['status'] !== 'success' ) {
-			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error desconocido al obtener cotización.', 'hoko-woocommerce-plugin' );
+			$error_message = isset( $data['message'] ) ? $data['message'] : __( 'Error desconocido al obtener cotización.', 'hoko-woocommerce' );
 			wp_send_json_error( array( 'message' => $error_message ) );
 		}
 
 		// Verificar si hay cotizaciones disponibles
 		if ( ! isset( $data['quotations'] ) || empty( $data['quotations'] ) ) {
-			wp_send_json_error( array( 'message' => __( 'No se encontraron cotizaciones disponibles para esta ruta.', 'hoko-woocommerce-plugin' ) ) );
+			wp_send_json_error( array( 'message' => __( 'No se encontraron cotizaciones disponibles para esta ruta.', 'hoko-woocommerce' ) ) );
 		}
 
 		// Enviar respuesta exitosa con las cotizaciones
 		wp_send_json_success( array(
-			'message' => __( 'Cotización obtenida exitosamente.', 'hoko-woocommerce-plugin' ),
+			'message' => __( 'Cotización obtenida exitosamente.', 'hoko-woocommerce' ),
 			'quotations' => $data['quotations']
 		) );
 	}
@@ -1173,7 +1173,7 @@ class Hoko_Admin {
 
 		wp_send_json_success(
 			array(
-				'message' => __( 'Sesión cerrada exitosamente.', 'hoko-woocommerce-plugin' ),
+				'message' => __( 'Sesión cerrada exitosamente.', 'hoko-woocommerce' ),
 			)
 		);
 	}

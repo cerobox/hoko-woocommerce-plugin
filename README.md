@@ -20,12 +20,12 @@ WordPress plugin that extends WooCommerce functionalities to provide custom feat
 ## Instalación / Installation
 
 **Español:**
-1. Sube la carpeta `hoko-woocommerce-plugin` al directorio `/wp-content/plugins/`
+1. Sube la carpeta `hoko-woocommerce` al directorio `/wp-content/plugins/`
 2. Activa el plugin a través del menú 'Plugins' en WordPress
 3. Asegúrate de tener WooCommerce instalado y activado
 
 **English:**
-1. Upload the `hoko-woocommerce-plugin` folder to the `/wp-content/plugins/` directory
+1. Upload the `hoko-woocommerce` folder to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Make sure you have WooCommerce installed and activated
 

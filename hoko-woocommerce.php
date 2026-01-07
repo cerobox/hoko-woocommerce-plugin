@@ -10,7 +10,7 @@
  * Author URI:        https://github.com/cerobox
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       hoko-woocommerce-plugin
+ * Text Domain:       hoko-woocommerce
  * Domain Path:       /languages
  * Requires Plugins:  woocommerce
  *
@@ -29,7 +29,7 @@ function hoko_360_activate() {
 	// Verificar si WooCommerce está activo
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		wp_die( 
-			esc_html__( 'Este plugin requiere WooCommerce. Por favor instala y activa WooCommerce primero.', 'hoko-woocommerce-plugin' ) 
+			esc_html__( 'Este plugin requiere WooCommerce. Por favor instala y activa WooCommerce primero.', 'hoko-woocommerce' ) 
 		);
 	}
 	
@@ -46,8 +46,10 @@ register_activation_hook( __FILE__, 'hoko_360_activate' );
  */
 function hoko_360_drop_legacy_tables() {
 	global $wpdb;
+	// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}hoko_country_cities" );
 	$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}hoko_country_states" );
+	// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 }
 
 /**
@@ -95,7 +97,7 @@ require_once plugin_dir_path( __FILE__ ) . 'admin/class-hoko-admin.php';
  * Inicializar el plugin.
  */
 function hoko_360_run() {
-	$plugin_name = 'hoko-woocommerce-plugin';
+	$plugin_name = 'hoko-woocommerce';
 	$version     = '1.0.0';
 	
 	$plugin_admin = new Hoko_Admin( $plugin_name, $version );

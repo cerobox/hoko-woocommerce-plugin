@@ -3,7 +3,7 @@ Contributors: Cerobox
 Donate link: https://hoko360.com/
 Tags: woocommerce, hoko, dropshipping, ecommerce
 Requires at least: 5.8
-Tested up to: 6.7
+Tested up to: 6.9
 Stable tag: 1.0.0
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -22,7 +22,7 @@ Hoko 360 is a WordPress plugin that extends WooCommerce functionalities to provi
 
 == Installation ==
 
-1. Upload the `hoko-woocommerce-plugin` folder to the `/wp-content/plugins/` directory
+1. Upload the `hoko-woocommerce` folder to the `/wp-content/plugins/` directory
 2. Make sure you have WooCommerce installed and activated
 3. Activate the plugin through the 'Plugins' menu in WordPress
 4. Navigate to Hoko menu in WordPress admin to configure your settings
