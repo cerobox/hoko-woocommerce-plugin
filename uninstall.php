@@ -12,5 +12,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 
 // Eliminar tablas de ciudades y estados (ya no se utilizan)
 global $wpdb;
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}hoko_country_cities" );
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}hoko_country_states" );
+// phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
