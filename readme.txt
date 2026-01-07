@@ -1,6 +1,7 @@
 === Hoko 360 ===
-Contributors: Hoko Dev Team
-Tags: woocommerce, admin, integration, hoko, dropshipping, ecommerce, colombia, ecuador, estados unidos, usa
+Contributors: Cerobox
+Donate link: https://hoko360.com/
+Tags: woocommerce, hoko, dropshipping, ecommerce
 Requires at least: 5.8
 Tested up to: 6.4
 Stable tag: 1.0.0
@@ -56,3 +57,14 @@ Yes, this plugin requires WooCommerce to be installed and activated.
 = 1.0.0 =
 * Versión inicial / Initial release
 * Estructura básica del plugin / Basic plugin structure
+
+== Upgrade Notice ==
+
+= 1.0.0 =
+Versión inicial del plugin. / Initial plugin release.
+
+== Screenshots ==
+
+1. Iniciar sesión y sincronizar token
+2. Ordenes de compra
+3. Creación de ordenes de compra en HOKO
