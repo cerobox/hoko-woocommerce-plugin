@@ -10,30 +10,6 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-$states = get_hoko_states();
-$cities = get_hoko_cities();
-$states_cities_map = array();
-
-if ( $states && $cities ) {
-	foreach ( $cities as $city ) {
-		$state_id = $city['state_id'];
-		if ( ! isset( $states_cities_map[$state_id] ) ) {
-			$states_cities_map[$state_id] = array();
-		}
-		$states_cities_map[$state_id][] = $city;
-	}
-}
-
-$current_city_id = $order->get_meta( '_hoko_city_id', true );
-$current_state_id = '';
-if ( $current_city_id && $cities ) {
-	foreach ( $cities as $city ) {
-		if ( $city['city_id'] == $current_city_id ) {
-			$current_state_id = $city['state_id'];
-			break;
-		}
-	}
-}
 ?>
 
 <div class="wrap">
@@ -313,23 +289,3 @@ if ( $current_city_id && $cities ) {
 		</div>
 	<?php endif; ?>
 </div>
-
-<?php
-function get_hoko_states() {
-	global $wpdb;
-	
-	$states_table = $wpdb->prefix . 'hoko_country_states';
-	$states = $wpdb->get_results( "SELECT state_id, state_name FROM $states_table ORDER BY state_name ASC", ARRAY_A );
-	
-	return $states;
-}
-
-function get_hoko_cities() {
-	global $wpdb;
-	
-	$cities_table = $wpdb->prefix . 'hoko_country_cities';
-	$cities = $wpdb->get_results( "SELECT city_id, city_name, state_id FROM $cities_table ORDER BY city_name ASC", ARRAY_A );
-	
-	return $cities;
-}
-?>

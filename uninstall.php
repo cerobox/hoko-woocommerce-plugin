@@ -10,6 +10,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-// Aquí puedes agregar código para limpiar opciones, tablas, etc.
-// Por ejemplo:
-// delete_option( 'hoko_woocommerce_option_name' );
+// Eliminar tablas de ciudades y estados (ya no se utilizan)
+global $wpdb;
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}hoko_country_cities" );
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}hoko_country_states" );
