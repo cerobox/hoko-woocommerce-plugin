@@ -706,7 +706,7 @@ class Hoko_Admin {
 			
 			wp_send_json_success(
 				array(
-					'message' => __( 'Orden creada exitosamente en Hoko.', 'hoko-360' ),
+					'message' => sprintf( __( 'Orden creada exitosamente en Hoko. ID: %s', 'hoko-360' ), $hoko_order_id ),
 					'data'    => $data,
 				)
 			);
