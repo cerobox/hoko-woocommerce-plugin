@@ -221,11 +221,13 @@ class Hoko_Admin {
 		$is_authenticated = ! empty( $token );
 		
 		// Obtener ID de orden desde parámetros
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce verified immediately below before any data is used
 		$order_id = isset( $_GET['order_id'] ) ? absint( $_GET['order_id'] ) : 0;
 		
 		// Verificar nonce si se proporciona order_id
 		if ( $order_id > 0 ) {
 			$nonce_action = 'hoko_order_confirm_' . $order_id;
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This IS the nonce verification
 			if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), $nonce_action ) ) {
 				wp_die( esc_html__( 'Acción no autorizada.', 'hoko-360' ) );
 			}
@@ -241,14 +243,22 @@ class Hoko_Admin {
 			$order = wc_get_order( $order_id );
 			
 			// Verificar si la orden ya fue sincronizada con Hoko
-			$table_name = $wpdb->prefix . 'hoko_orders';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$sync_data = $wpdb->get_row(
-				$wpdb->prepare(
-					"SELECT hoko_order_id, sync_status, sync_message FROM {$wpdb->prefix}hoko_orders WHERE order_id = %d",
-					$order_id
-				)
-			);
+			$cache_key = 'hoko_order_sync_' . $order_id;
+			$sync_data = wp_cache_get( $cache_key, 'hoko_orders' );
+			
+			if ( false === $sync_data ) {
+				$table_name = $wpdb->prefix . 'hoko_orders';
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				$sync_data = $wpdb->get_row(
+					$wpdb->prepare(
+						"SELECT hoko_order_id, sync_status, sync_message FROM {$wpdb->prefix}hoko_orders WHERE order_id = %d",
+						$order_id
+					)
+				);
+				
+				// Cache for 5 minutes
+				wp_cache_set( $cache_key, $sync_data, 'hoko_orders', 300 );
+			}
 			
 			if ( $sync_data ) {
 				$hoko_order_id = $sync_data->hoko_order_id;
@@ -285,17 +295,26 @@ class Hoko_Admin {
 
 		// Obtener IDs de órdenes para consulta batch
 		$order_ids = wp_list_pluck( $orders, 'id' );
-		$placeholders = implode( ',', array_fill( 0, count( $order_ids ), '%d' ) );
 		
-		$table_name = $wpdb->prefix . 'hoko_orders';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-		$sync_data = $wpdb->get_results(
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-			$wpdb->prepare(
-				"SELECT order_id, sync_status, sync_message, hoko_order_id, synced_at FROM {$wpdb->prefix}hoko_orders WHERE order_id IN ($placeholders)",
-				$order_ids
-			)
-		);
+		// Try to get from cache first
+		$cache_key = 'hoko_sync_data_' . md5( implode( ',', $order_ids ) );
+		$sync_data = wp_cache_get( $cache_key, 'hoko_orders' );
+		
+		if ( false === $sync_data ) {
+			$placeholders = implode( ',', array_fill( 0, count( $order_ids ), '%d' ) );
+			
+			$table_name = $wpdb->prefix . 'hoko_orders';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$sync_data = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT order_id, sync_status, sync_message, hoko_order_id, synced_at FROM {$wpdb->prefix}hoko_orders WHERE order_id IN (" . $placeholders . ")",
+					...$order_ids
+				)
+			);
+			
+			// Cache for 5 minutes
+			wp_cache_set( $cache_key, $sync_data, 'hoko_orders', 300 );
+		}
 		
 		// Crear mapa de datos de sincronización
 		$sync_map = array();
@@ -440,9 +459,9 @@ class Hoko_Admin {
 
 		// Obtener y validar datos del formulario
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in verify_ajax_request()
-		$email    = isset( $_POST['email'] ) ? sanitize_email( $_POST['email'] ) : '';
-		$password = isset( $_POST['password'] ) ? $_POST['password'] : '';
-		$country  = isset( $_POST['country'] ) ? sanitize_text_field( $_POST['country'] ) : 'colombia';
+		$email    = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+		$password = isset( $_POST['password'] ) ? sanitize_text_field( wp_unslash( $_POST['password'] ) ) : '';
+		$country  = isset( $_POST['country'] ) ? sanitize_text_field( wp_unslash( $_POST['country'] ) ) : 'colombia';
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		$this->validate_auth_data( $email, $password, $country );
@@ -690,7 +709,7 @@ class Hoko_Admin {
 
 		// Validar y obtener orden
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in verify_ajax_request()
-		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+		$order_id = isset( $_POST['order_id'] ) ? absint( wp_unslash( $_POST['order_id'] ) ) : 0;
 		if ( ! $order_id ) {
 			wp_send_json_error( array( 'message' => __( 'ID de orden no válido.', 'hoko-360' ) ) );
 		}
@@ -701,14 +720,22 @@ class Hoko_Admin {
 		}
 
 		// Verificar si la orden ya fue sincronizada con Hoko
-		$table_name = $wpdb->prefix . 'hoko_orders';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$sync_data = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT hoko_order_id, sync_status FROM {$wpdb->prefix}hoko_orders WHERE order_id = %d",
-				$order_id
-			)
-		);
+		$cache_key = 'hoko_order_sync_' . $order_id;
+		$sync_data = wp_cache_get( $cache_key, 'hoko_orders' );
+		
+		if ( false === $sync_data ) {
+			$table_name = $wpdb->prefix . 'hoko_orders';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+			$sync_data = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT hoko_order_id, sync_status FROM {$wpdb->prefix}hoko_orders WHERE order_id = %d",
+					$order_id
+				)
+			);
+			
+			// Cache for 5 minutes
+			wp_cache_set( $cache_key, $sync_data, 'hoko_orders', 300 );
+		}
 		
 		if ( $sync_data && $sync_data->sync_status === '1' && ! empty( $sync_data->hoko_order_id ) ) {
 			wp_send_json_error(
@@ -773,14 +800,13 @@ class Hoko_Admin {
 	 * @return array Datos formateados para Hoko.
 	 */
 	private function prepare_order_data_from_form() {
-		// Obtener la orden para capturar billing_city y billing_state
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in verify_ajax_request() before calling this method
-		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+		// Obtener la orden para capturar billing_city y billing_state
+		$order_id = isset( $_POST['order_id'] ) ? absint( wp_unslash( $_POST['order_id'] ) ) : 0;
 		$order = wc_get_order( $order_id );
 		
 		// Obtener customer como string JSON (NO decodificar, la API de Hoko espera un string)
-		$customer_json = $_POST['customer'] ?? '{}';
-		// phpcs:enable WordPress.Security.NonceVerification.Missing
+		$customer_json = isset( $_POST['customer'] ) ? sanitize_text_field( wp_unslash( $_POST['customer'] ) ) : '{}';
 		$customer_json = stripslashes( $customer_json );
 		
 		// Validar que sea un JSON válido
@@ -794,15 +820,16 @@ class Hoko_Admin {
 			$customer_data = json_decode( $customer_json, true );
 			$customer_data['city'] = $order->get_billing_city();
 			$customer_data['state'] = $order->get_billing_state();
-			$customer_json = json_encode( $customer_data );
+			$customer_json = wp_json_encode( $customer_data );
 		}
 		
 		// Obtener stocks como string JSON
-		$stocks_json = $_POST['stocks'] ?? '{}';
-		if ( is_array( $_POST['stocks'] ?? null ) ) {
-			$stocks = $this->sanitize_stocks_data( $_POST['stocks'] );
-			$stocks_json = json_encode( $stocks );
+		$stocks_raw = isset( $_POST['stocks'] ) ? wp_unslash( $_POST['stocks'] ) : '{}';
+		if ( is_array( $stocks_raw ) ) {
+			$stocks = $this->sanitize_stocks_data( $stocks_raw );
+			$stocks_json = wp_json_encode( $stocks );
 		} else {
+			$stocks_json = sanitize_text_field( $stocks_raw );
 			$stocks_json = stripslashes( $stocks_json );
 			$stocks_test = json_decode( $stocks_json, true );
 			if ( json_last_error() !== JSON_ERROR_NONE ) {
@@ -811,16 +838,17 @@ class Hoko_Admin {
 		}
 		
 		// Obtener measures como string JSON
-		$measures_json = $_POST['measures'] ?? '{}';
-		if ( is_array( $_POST['measures'] ?? null ) ) {
+		$measures_raw = isset( $_POST['measures'] ) ? wp_unslash( $_POST['measures'] ) : '{}';
+		if ( is_array( $measures_raw ) ) {
 			$measures_data = array(
-				'height' => isset( $_POST['measures']['height'] ) ? sanitize_text_field( $_POST['measures']['height'] ) : '10',
-				'width'  => isset( $_POST['measures']['width'] ) ? sanitize_text_field( $_POST['measures']['width'] ) : '10',
-				'length' => isset( $_POST['measures']['length'] ) ? sanitize_text_field( $_POST['measures']['length'] ) : '10',
-				'weight' => isset( $_POST['measures']['weight'] ) ? sanitize_text_field( $_POST['measures']['weight'] ) : '1',
+				'height' => isset( $measures_raw['height'] ) ? sanitize_text_field( $measures_raw['height'] ) : '10',
+				'width'  => isset( $measures_raw['width'] ) ? sanitize_text_field( $measures_raw['width'] ) : '10',
+				'length' => isset( $measures_raw['length'] ) ? sanitize_text_field( $measures_raw['length'] ) : '10',
+				'weight' => isset( $measures_raw['weight'] ) ? sanitize_text_field( $measures_raw['weight'] ) : '1',
 			);
-			$measures_json = json_encode( $measures_data );
+			$measures_json = wp_json_encode( $measures_data );
 		} else {
+			$measures_json = sanitize_text_field( $measures_raw );
 			$measures_json = stripslashes( $measures_json );
 			$measures_test = json_decode( $measures_json, true );
 			if ( json_last_error() !== JSON_ERROR_NONE ) {
@@ -831,13 +859,14 @@ class Hoko_Admin {
 		return array(
 			'customer'    => $customer_json,
 			'stocks'      => $stocks_json,
-			'payment'     => isset( $_POST['payment'] ) ? absint( $_POST['payment'] ) : 0,
-			'courier_id'  => isset( $_POST['selected_courier_id'] ) ? absint( $_POST['selected_courier_id'] ) : 44,
-			'contain'     => isset( $_POST['contain'] ) ? sanitize_text_field( $_POST['contain'] ) : '',
+			'payment'     => isset( $_POST['payment'] ) ? absint( wp_unslash( $_POST['payment'] ) ) : 0,
+			'courier_id'  => isset( $_POST['selected_courier_id'] ) ? absint( wp_unslash( $_POST['selected_courier_id'] ) ) : 44,
+			'contain'     => isset( $_POST['contain'] ) ? sanitize_text_field( wp_unslash( $_POST['contain'] ) ) : '',
 			'measures'    => $measures_json,
-			'external_id' => isset( $_POST['order_id'] ) ? sanitize_text_field( $_POST['order_id'] ) : '',
+			'external_id' => isset( $_POST['order_id'] ) ? sanitize_text_field( wp_unslash( $_POST['order_id'] ) ) : '',
 			'origin' => 3 // Requerido para permitir creación para ordenes desde woocommerce
 		);
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 	}
 
 	/**
@@ -967,12 +996,16 @@ class Hoko_Admin {
 		}
 		
 		// Usar REPLACE INTO para simplificar lógica (más eficiente)
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 		$wpdb->replace(
 			$table_name,
 			$data,
 			array( '%d', '%d', '%s', '%s', '%s', '%s' )
 		);
+		
+		// Invalidate cache after update
+		$cache_key = 'hoko_order_sync_' . $order_id;
+		wp_cache_delete( $cache_key, 'hoko_orders' );
 	}
 
 
@@ -986,13 +1019,13 @@ class Hoko_Admin {
 
 		// Obtener parámetros de la cotización
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in verify_ajax_request()
-		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
-		$stock_ids = isset( $_POST['stock_ids'] ) ? sanitize_text_field( $_POST['stock_ids'] ) : '';
-		$city = isset( $_POST['city'] ) ? sanitize_text_field( $_POST['city'] ) : '';
-		$state = isset( $_POST['state'] ) ? sanitize_text_field( $_POST['state'] ) : '';
-		$payment = isset( $_POST['payment'] ) ? absint( $_POST['payment'] ) : 0;
-		$declared_value = isset( $_POST['declared_value'] ) ? absint( $_POST['declared_value'] ) : 10000;
-		$collection_value = isset( $_POST['collection_value'] ) ? absint( $_POST['collection_value'] ) : 150000;
+		$order_id = isset( $_POST['order_id'] ) ? absint( wp_unslash( $_POST['order_id'] ) ) : 0;
+		$stock_ids = isset( $_POST['stock_ids'] ) ? sanitize_text_field( wp_unslash( $_POST['stock_ids'] ) ) : '';
+		$city = isset( $_POST['city'] ) ? sanitize_text_field( wp_unslash( $_POST['city'] ) ) : '';
+		$state = isset( $_POST['state'] ) ? sanitize_text_field( wp_unslash( $_POST['state'] ) ) : '';
+		$payment = isset( $_POST['payment'] ) ? absint( wp_unslash( $_POST['payment'] ) ) : 0;
+		$declared_value = isset( $_POST['declared_value'] ) ? absint( wp_unslash( $_POST['declared_value'] ) ) : 10000;
+		$collection_value = isset( $_POST['collection_value'] ) ? absint( wp_unslash( $_POST['collection_value'] ) ) : 150000;
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		// Validar parámetros requeridos
@@ -1002,14 +1035,22 @@ class Hoko_Admin {
 
 		// Verificar si la orden ya fue sincronizada con Hoko
 		if ( $order_id > 0 ) {
-			$table_name = $wpdb->prefix . 'hoko_orders';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-			$sync_data = $wpdb->get_row(
-				$wpdb->prepare(
-					"SELECT hoko_order_id, sync_status FROM {$wpdb->prefix}hoko_orders WHERE order_id = %d",
-					$order_id
-				)
-			);
+			$cache_key = 'hoko_order_sync_' . $order_id;
+			$sync_data = wp_cache_get( $cache_key, 'hoko_orders' );
+			
+			if ( false === $sync_data ) {
+				$table_name = $wpdb->prefix . 'hoko_orders';
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+				$sync_data = $wpdb->get_row(
+					$wpdb->prepare(
+						"SELECT hoko_order_id, sync_status FROM {$wpdb->prefix}hoko_orders WHERE order_id = %d",
+						$order_id
+					)
+				);
+				
+				// Cache for 5 minutes
+				wp_cache_set( $cache_key, $sync_data, 'hoko_orders', 300 );
+			}
 			
 			if ( $sync_data && $sync_data->sync_status === '1' && ! empty( $sync_data->hoko_order_id ) ) {
 				wp_send_json_error(
