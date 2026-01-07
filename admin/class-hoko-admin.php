@@ -214,6 +214,8 @@ class Hoko_Admin {
 	 * Muestra la página de confirmación de orden.
 	 */
 	public function display_order_confirm_page() {
+		global $wpdb;
+		
 		// Verificar si está autenticado
 		$token = get_option( 'hoko_360_auth_token', '' );
 		$is_authenticated = ! empty( $token );
@@ -223,8 +225,27 @@ class Hoko_Admin {
 		
 		// Obtener orden de WooCommerce
 		$order = null;
+		$hoko_order_id = null;
+		$sync_status = 0;
+		$sync_message = '';
+		
 		if ( $order_id && $is_authenticated ) {
 			$order = wc_get_order( $order_id );
+			
+			// Verificar si la orden ya fue sincronizada con Hoko
+			$table_name = $wpdb->prefix . 'hoko_orders';
+			$sync_data = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT hoko_order_id, sync_status, sync_message FROM $table_name WHERE order_id = %d",
+					$order_id
+				)
+			);
+			
+			if ( $sync_data ) {
+				$hoko_order_id = $sync_data->hoko_order_id;
+				$sync_status = (int) $sync_data->sync_status;
+				$sync_message = $sync_data->sync_message;
+			}
 		}
 		
 		require_once plugin_dir_path( __FILE__ ) . 'partials/hoko-admin-order-confirm.php';
@@ -645,6 +666,8 @@ class Hoko_Admin {
 	 * Maneja la petición AJAX para crear orden en Hoko.
 	 */
 	public function handle_create_order_request() {
+		global $wpdb;
+		
 		$this->verify_ajax_request();
 
 		// Verificar autenticación
@@ -661,6 +684,26 @@ class Hoko_Admin {
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
 			wp_send_json_error( array( 'message' => __( 'Orden no encontrada.', 'hoko-360' ) ) );
+		}
+
+		// Verificar si la orden ya fue sincronizada con Hoko
+		$table_name = $wpdb->prefix . 'hoko_orders';
+		$sync_data = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT hoko_order_id, sync_status FROM $table_name WHERE order_id = %d",
+				$order_id
+			)
+		);
+		
+		if ( $sync_data && $sync_data->sync_status === '1' && ! empty( $sync_data->hoko_order_id ) ) {
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+						__( 'Esta orden ya fue creada en Hoko con el ID: %s. No se puede crear nuevamente.', 'hoko-360' ),
+						$sync_data->hoko_order_id
+					),
+				)
+			);
 		}
 
 		// Preparar datos y realizar petición
@@ -917,9 +960,12 @@ class Hoko_Admin {
 	 * Maneja la petición AJAX para obtener cotización de envío.
 	 */
 	public function handle_shipping_quotation_request() {
+		global $wpdb;
+		
 		$this->verify_ajax_request();
 
 		// Obtener parámetros de la cotización
+		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
 		$stock_ids = isset( $_POST['stock_ids'] ) ? sanitize_text_field( $_POST['stock_ids'] ) : '';
 		$city = isset( $_POST['city'] ) ? sanitize_text_field( $_POST['city'] ) : '';
 		$state = isset( $_POST['state'] ) ? sanitize_text_field( $_POST['state'] ) : '';
@@ -930,6 +976,28 @@ class Hoko_Admin {
 		// Validar parámetros requeridos
 		if ( ! $stock_ids || ! $city || ! $state ) {
 			wp_send_json_error( array( 'message' => __( 'Faltan parámetros requeridos para la cotización.', 'hoko-360' ) ) );
+		}
+
+		// Verificar si la orden ya fue sincronizada con Hoko
+		if ( $order_id > 0 ) {
+			$table_name = $wpdb->prefix . 'hoko_orders';
+			$sync_data = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT hoko_order_id, sync_status FROM $table_name WHERE order_id = %d",
+					$order_id
+				)
+			);
+			
+			if ( $sync_data && $sync_data->sync_status === '1' && ! empty( $sync_data->hoko_order_id ) ) {
+				wp_send_json_error(
+					array(
+						'message' => sprintf(
+							__( 'Esta orden ya fue creada en Hoko con el ID: %s. No se puede cotizar nuevamente.', 'hoko-360' ),
+							$sync_data->hoko_order_id
+						),
+					)
+				);
+			}
 		}
 
 		// Obtener token de autentificación

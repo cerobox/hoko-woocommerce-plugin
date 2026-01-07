@@ -264,6 +264,7 @@
 			var $message = $('#hoko-confirm-message');
 			
 			// Obtener datos del formulario para la cotización
+			var orderId = $('input[name="order_id"]').val();
 			var billingCity = $('#billing_city').val();
 			var billingState = $('#billing_state').val();
 			var payment = $('#payment').val();
@@ -324,6 +325,7 @@
 				data: {
 					action: 'hoko_get_shipping_quotation',
 					nonce: hokoAdmin.nonce,
+					order_id: orderId,
 					stock_ids: stockIds.join(','),
 					city: billingCity,
 					state: billingState,

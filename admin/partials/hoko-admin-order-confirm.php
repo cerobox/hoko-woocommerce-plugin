@@ -42,6 +42,116 @@ if ( ! defined( 'WPINC' ) ) {
 				<?php esc_html_e( 'Volver a Órdenes', 'hoko-360' ); ?>
 			</a>
 		</p>
+	<?php elseif ( $sync_status === 1 && ! empty( $hoko_order_id ) ) : ?>
+		<!-- Orden ya sincronizada -->
+		<div class="notice notice-info">
+			<p>
+				<strong><?php esc_html_e( 'Orden ya sincronizada', 'hoko-360' ); ?></strong><br>
+				<?php 
+				printf(
+					/* translators: %s: ID de la orden en Hoko */
+					esc_html__( 'Esta orden ya fue creada en Hoko con el ID: %s', 'hoko-360' ),
+					'<strong>' . esc_html( $hoko_order_id ) . '</strong>'
+				);
+				?>
+			</p>
+			<?php if ( ! empty( $sync_message ) ) : ?>
+				<p><?php echo esc_html( $sync_message ); ?></p>
+			<?php endif; ?>
+		</div>
+		
+		<!-- Detalles de la orden (solo lectura) -->
+		<div class="hoko-confirm-container">
+			<div class="hoko-confirm-card">
+				<h2><?php esc_html_e( 'Detalles de la Orden', 'hoko-360' ); ?> #<?php echo esc_html( $order->get_order_number() ); ?></h2>
+				
+				<!-- Información de la orden -->
+				<div class="hoko-confirm-section">
+					<table class="form-table">
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Fecha', 'hoko-360' ); ?></th>
+							<td><?php echo esc_html( $order->get_date_created()->date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ) ); ?></td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Estado', 'hoko-360' ); ?></th>
+							<td><?php echo esc_html( wc_get_order_status_name( $order->get_status() ) ); ?></td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Total', 'hoko-360' ); ?></th>
+							<td><strong><?php echo wp_kses_post( $order->get_formatted_order_total() ); ?></strong></td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'ID Orden Hoko', 'hoko-360' ); ?></th>
+							<td><strong><?php echo esc_html( $hoko_order_id ); ?></strong></td>
+						</tr>
+					</table>
+				</div>
+
+				<!-- Información del cliente -->
+				<div class="hoko-confirm-section">
+					<h3><?php esc_html_e( 'Información del Cliente', 'hoko-360' ); ?></h3>
+					<table class="form-table">
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Nombre', 'hoko-360' ); ?></th>
+							<td><?php echo esc_html( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ); ?></td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Teléfono', 'hoko-360' ); ?></th>
+							<td><?php echo esc_html( $order->get_billing_phone() ); ?></td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Dirección', 'hoko-360' ); ?></th>
+							<td><?php echo esc_html( $order->get_billing_address_1() . ( $order->get_billing_address_2() ? ' ' . $order->get_billing_address_2() : '' ) ); ?></td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Email', 'hoko-360' ); ?></th>
+							<td><?php echo esc_html( $order->get_billing_email() ); ?></td>
+						</tr>
+					</table>
+				</div>
+
+				<!-- Productos -->
+				<div class="hoko-confirm-section">
+					<h3><?php esc_html_e( 'Productos', 'hoko-360' ); ?></h3>
+					<table class="wp-list-table widefat fixed striped">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Producto', 'hoko-360' ); ?></th>
+								<th><?php esc_html_e( 'SKU', 'hoko-360' ); ?></th>
+								<th><?php esc_html_e( 'Cantidad', 'hoko-360' ); ?></th>
+								<th><?php esc_html_e( 'Precio Unitario', 'hoko-360' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php 
+							foreach ( $order->get_items() as $item ) : 
+								$product = $item->get_product();
+								if ( ! $product ) {
+									continue;
+								}
+								$product_id = $product->get_id();
+								$sku = $product->get_sku() ?: $product_id;
+								$quantity = $item->get_quantity();
+								$unit_price = floatval( $item->get_total() / $quantity );
+							?>
+								<tr>
+									<td><?php echo esc_html( $item->get_name() ); ?></td>
+									<td><?php echo esc_html( $sku ); ?></td>
+									<td><?php echo esc_html( $quantity ); ?></td>
+									<td><?php echo esc_html( number_format( $unit_price, 2, '.', '' ) ); ?></td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+
+				<p>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=hoko-360-orders' ) ); ?>" class="button button-primary">
+						<?php esc_html_e( 'Volver a Órdenes', 'hoko-360' ); ?>
+					</a>
+				</p>
+			</div>
+		</div>
 	<?php else : ?>
 		<!-- Formulario de confirmación -->
 		<div class="hoko-confirm-container">
