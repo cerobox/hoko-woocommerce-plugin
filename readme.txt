@@ -3,28 +3,17 @@ Contributors: Cerobox
 Donate link: https://hoko360.com/
 Tags: woocommerce, hoko, dropshipping, ecommerce
 Requires at least: 5.8
-Tested up to: 6.4
+Tested up to: 6.7
 Stable tag: 1.0.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Plugin de integración con WooCommerce para Hoko 360.
+WooCommerce integration plugin for Hoko 360 shipping and order management.
 
 == Description ==
 
-**Español:**
-
-Hoko 360 es un plugin de WordPress que extiende las funcionalidades de WooCommerce para proporcionar características personalizadas.
-
-**Características:**
-* Integración con WooCommerce
-* Compatible con WordPress 5.8+
-* Requiere PHP 7.4 o superior
-
-**English:**
-
-Hoko 360 is a WordPress plugin that extends WooCommerce functionalities to provide custom features.
+Hoko 360 is a WordPress plugin that extends WooCommerce functionalities to provide seamless integration with Hoko 360 shipping and order management platform.
 
 **Features:**
 * WooCommerce integration
@@ -33,38 +22,36 @@ Hoko 360 is a WordPress plugin that extends WooCommerce functionalities to provi
 
 == Installation ==
 
-**Español:**
-
-1. Sube la carpeta `hoko-woocommerce-plugin` al directorio `/wp-content/plugins/`
-2. Asegúrate de tener WooCommerce instalado y activado
-3. Activa el plugin a través del menú 'Plugins' en WordPress
-
-**English:**
-
 1. Upload the `hoko-woocommerce-plugin` folder to the `/wp-content/plugins/` directory
 2. Make sure you have WooCommerce installed and activated
 3. Activate the plugin through the 'Plugins' menu in WordPress
+4. Navigate to Hoko menu in WordPress admin to configure your settings
 
 == Frequently Asked Questions ==
 
-= ¿Requiere WooCommerce? / Does it require WooCommerce? =
+= Does it require WooCommerce? =
 
-Sí, este plugin requiere que WooCommerce esté instalado y activado.
 Yes, this plugin requires WooCommerce to be installed and activated.
+
+= Which countries are supported? =
+
+Currently supports Colombia, Ecuador, and USA.
 
 == Changelog ==
 
 = 1.0.0 =
-* Versión inicial / Initial release
-* Estructura básica del plugin / Basic plugin structure
+* Initial release
+* Basic plugin structure
+* WooCommerce order synchronization
+* Multi-country support
 
 == Upgrade Notice ==
 
 = 1.0.0 =
-Versión inicial del plugin. / Initial plugin release.
+Initial plugin release.
 
 == Screenshots ==
 
-1. Iniciar sesión y sincronizar token
-2. Ordenes de compra
-3. Creación de ordenes de compra en HOKO
+1. Login and token synchronization
+2. Purchase orders management
+3. Order creation in HOKO

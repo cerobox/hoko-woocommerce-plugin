@@ -72,7 +72,7 @@ class Hoko_Admin {
 	 */
 	public function enqueue_styles( $hook ) {
 		// Solo cargar en páginas de Hoko 360
-		if ( strpos( $hook, 'hoko-woocommerce-plugin' ) === false ) {
+		if ( strpos( $hook, 'hoko-360' ) === false ) {
 			return;
 		}
 
@@ -90,7 +90,7 @@ class Hoko_Admin {
 	 */
 	public function enqueue_scripts( $hook ) {
 		// Solo cargar en páginas de Hoko 360
-		if ( strpos( $hook, 'hoko-woocommerce-plugin' ) === false ) {
+		if ( strpos( $hook, 'hoko-360' ) === false ) {
 			return;
 		}
 
@@ -234,9 +234,10 @@ class Hoko_Admin {
 			
 			// Verificar si la orden ya fue sincronizada con Hoko
 			$table_name = $wpdb->prefix . 'hoko_orders';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$sync_data = $wpdb->get_row(
 				$wpdb->prepare(
-					"SELECT hoko_order_id, sync_status, sync_message FROM $table_name WHERE order_id = %d",
+					"SELECT hoko_order_id, sync_status, sync_message FROM {$wpdb->prefix}hoko_orders WHERE order_id = %d",
 					$order_id
 				)
 			);
@@ -279,9 +280,11 @@ class Hoko_Admin {
 		$placeholders = implode( ',', array_fill( 0, count( $order_ids ), '%d' ) );
 		
 		$table_name = $wpdb->prefix . 'hoko_orders';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 		$sync_data = $wpdb->get_results(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 			$wpdb->prepare(
-				"SELECT order_id, sync_status, sync_message, hoko_order_id, synced_at FROM $table_name WHERE order_id IN ($placeholders)",
+				"SELECT order_id, sync_status, sync_message, hoko_order_id, synced_at FROM {$wpdb->prefix}hoko_orders WHERE order_id IN ($placeholders)",
 				$order_ids
 			)
 		);
@@ -516,7 +519,7 @@ class Hoko_Admin {
 	/**
 	 * Procesa respuesta de autentificación.
 	 */
-	private function process_auth_response( $response, $country, $email, $password = '' ) {
+	private function process_auth_response( $response, $country, $email, $password ) {
 		$response_code = wp_remote_retrieve_response_code( $response );
 		$response_body = wp_remote_retrieve_body( $response );
 		$data          = json_decode( $response_body, true );
@@ -688,9 +691,10 @@ class Hoko_Admin {
 
 		// Verificar si la orden ya fue sincronizada con Hoko
 		$table_name = $wpdb->prefix . 'hoko_orders';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$sync_data = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT hoko_order_id, sync_status FROM $table_name WHERE order_id = %d",
+				"SELECT hoko_order_id, sync_status FROM {$wpdb->prefix}hoko_orders WHERE order_id = %d",
 				$order_id
 			)
 		);
@@ -699,6 +703,7 @@ class Hoko_Admin {
 			wp_send_json_error(
 				array(
 					'message' => sprintf(
+						/* translators: %s: Hoko order ID */
 						__( 'Esta orden ya fue creada en Hoko con el ID: %s. No se puede crear nuevamente.', 'hoko-woocommerce-plugin' ),
 						$sync_data->hoko_order_id
 					),
@@ -739,6 +744,7 @@ class Hoko_Admin {
 			
 			wp_send_json_success(
 				array(
+					/* translators: %s: Hoko order ID */
 					'message' => sprintf( __( 'Orden creada exitosamente en Hoko. ID: %s', 'hoko-woocommerce-plugin' ), $hoko_order_id ),
 					'data'    => $data,
 				)
@@ -948,6 +954,7 @@ class Hoko_Admin {
 		}
 		
 		// Usar REPLACE INTO para simplificar lógica (más eficiente)
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->replace(
 			$table_name,
 			$data,
@@ -981,9 +988,10 @@ class Hoko_Admin {
 		// Verificar si la orden ya fue sincronizada con Hoko
 		if ( $order_id > 0 ) {
 			$table_name = $wpdb->prefix . 'hoko_orders';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$sync_data = $wpdb->get_row(
 				$wpdb->prepare(
-					"SELECT hoko_order_id, sync_status FROM $table_name WHERE order_id = %d",
+					"SELECT hoko_order_id, sync_status FROM {$wpdb->prefix}hoko_orders WHERE order_id = %d",
 					$order_id
 				)
 			);
@@ -992,6 +1000,7 @@ class Hoko_Admin {
 				wp_send_json_error(
 					array(
 						'message' => sprintf(
+							/* translators: %s: Hoko order ID */
 							__( 'Esta orden ya fue creada en Hoko con el ID: %s. No se puede cotizar nuevamente.', 'hoko-woocommerce-plugin' ),
 							$sync_data->hoko_order_id
 						),

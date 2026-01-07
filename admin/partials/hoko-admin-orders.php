@@ -75,6 +75,7 @@ if ( ! defined( 'WPINC' ) ) {
 									<td>
 										<strong>#<?php echo esc_html( $order->get_order_number() ); ?></strong>
 										<?php if ( $hoko_order_id ) : ?>
+											<?php /* translators: %s: Hoko order ID */ ?>
 											<br><small><?php echo esc_html( sprintf( __( 'Hoko ID: %s', 'hoko-woocommerce-plugin' ), $hoko_order_id ) ); ?></small>
 										<?php endif; ?>
 									</td>
