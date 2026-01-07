@@ -96,7 +96,7 @@ if ( ! defined( 'WPINC' ) ) {
 									<td>
 										<?php if ( $hoko_sync_status !== 1 ) : ?>
 											<a 
-												href="<?php echo esc_url( admin_url( 'admin.php?page=hoko-360-order-confirm&order_id=' . $order->get_id() ) ); ?>" 
+												href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=hoko-360-order-confirm&order_id=' . $order->get_id() ), 'hoko_order_confirm_' . $order->get_id() ) ); ?>" 
 												class="button button-primary"
 											>
 												<?php esc_html_e( 'Crear Orden', 'hoko-360' ); ?>

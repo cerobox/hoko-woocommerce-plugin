@@ -223,6 +223,14 @@ class Hoko_Admin {
 		// Obtener ID de orden desde parámetros
 		$order_id = isset( $_GET['order_id'] ) ? absint( $_GET['order_id'] ) : 0;
 		
+		// Verificar nonce si se proporciona order_id
+		if ( $order_id > 0 ) {
+			$nonce_action = 'hoko_order_confirm_' . $order_id;
+			if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), $nonce_action ) ) {
+				wp_die( esc_html__( 'Acción no autorizada.', 'hoko-360' ) );
+			}
+		}
+		
 		// Obtener orden de WooCommerce
 		$order = null;
 		$hoko_order_id = null;
@@ -431,9 +439,11 @@ class Hoko_Admin {
 		$this->verify_ajax_request();
 
 		// Obtener y validar datos del formulario
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in verify_ajax_request()
 		$email    = isset( $_POST['email'] ) ? sanitize_email( $_POST['email'] ) : '';
 		$password = isset( $_POST['password'] ) ? $_POST['password'] : '';
 		$country  = isset( $_POST['country'] ) ? sanitize_text_field( $_POST['country'] ) : 'colombia';
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		$this->validate_auth_data( $email, $password, $country );
 
@@ -679,6 +689,7 @@ class Hoko_Admin {
 		}
 
 		// Validar y obtener orden
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in verify_ajax_request()
 		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
 		if ( ! $order_id ) {
 			wp_send_json_error( array( 'message' => __( 'ID de orden no válido.', 'hoko-360' ) ) );
@@ -763,11 +774,13 @@ class Hoko_Admin {
 	 */
 	private function prepare_order_data_from_form() {
 		// Obtener la orden para capturar billing_city y billing_state
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in verify_ajax_request() before calling this method
 		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
 		$order = wc_get_order( $order_id );
 		
 		// Obtener customer como string JSON (NO decodificar, la API de Hoko espera un string)
 		$customer_json = $_POST['customer'] ?? '{}';
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 		$customer_json = stripslashes( $customer_json );
 		
 		// Validar que sea un JSON válido
@@ -972,6 +985,7 @@ class Hoko_Admin {
 		$this->verify_ajax_request();
 
 		// Obtener parámetros de la cotización
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verified in verify_ajax_request()
 		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
 		$stock_ids = isset( $_POST['stock_ids'] ) ? sanitize_text_field( $_POST['stock_ids'] ) : '';
 		$city = isset( $_POST['city'] ) ? sanitize_text_field( $_POST['city'] ) : '';
@@ -979,6 +993,7 @@ class Hoko_Admin {
 		$payment = isset( $_POST['payment'] ) ? absint( $_POST['payment'] ) : 0;
 		$declared_value = isset( $_POST['declared_value'] ) ? absint( $_POST['declared_value'] ) : 10000;
 		$collection_value = isset( $_POST['collection_value'] ) ? absint( $_POST['collection_value'] ) : 150000;
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		// Validar parámetros requeridos
 		if ( ! $stock_ids || ! $city || ! $state ) {
