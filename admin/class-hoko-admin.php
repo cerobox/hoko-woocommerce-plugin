@@ -302,12 +302,19 @@ class Hoko_Admin {
 		
 		if ( false === $sync_data ) {
 			$placeholders = implode( ',', array_fill( 0, count( $order_ids ), '%d' ) );
-			
 			$table_name = $wpdb->prefix . 'hoko_orders';
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+		
+			// Build query with escaped table name and placeholders
+			$query = sprintf(
+				'SELECT order_id, sync_status, sync_message, hoko_order_id, synced_at FROM %1$s WHERE order_id IN (%2$s)',
+				esc_sql( $table_name ),
+				$placeholders
+			);
+		
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.NotPrepared
 			$sync_data = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT order_id, sync_status, sync_message, hoko_order_id, synced_at FROM {$wpdb->prefix}hoko_orders WHERE order_id IN (" . $placeholders . ")",
+					$query, // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 					...$order_ids
 				)
 			);
@@ -321,7 +328,7 @@ class Hoko_Admin {
 		foreach ( $sync_data as $data ) {
 			$sync_map[ $data->order_id ] = $data;
 		}
-		
+ 
 		// Combinar datos
 		$orders_data = array();
 		foreach ( $orders as $order ) {
@@ -824,6 +831,7 @@ class Hoko_Admin {
 		}
 		
 		// Obtener stocks como string JSON
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$stocks_raw = isset( $_POST['stocks'] ) ? wp_unslash( $_POST['stocks'] ) : '{}';
 		if ( is_array( $stocks_raw ) ) {
 			$stocks = $this->sanitize_stocks_data( $stocks_raw );
@@ -838,6 +846,7 @@ class Hoko_Admin {
 		}
 		
 		// Obtener measures como string JSON
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$measures_raw = isset( $_POST['measures'] ) ? wp_unslash( $_POST['measures'] ) : '{}';
 		if ( is_array( $measures_raw ) ) {
 			$measures_data = array(
