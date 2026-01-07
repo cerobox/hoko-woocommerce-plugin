@@ -13,18 +13,18 @@ if ( ! defined( 'WPINC' ) ) {
 ?>
 
 <div class="wrap">
-	<h1><?php esc_html_e( 'Confirmar Orden de Compra', 'hoko-woocommerce' ); ?></h1>
+	<h1><?php esc_html_e( 'Confirmar Orden de Compra', 'hoko-360' ); ?></h1>
 	
 	<?php if ( ! $is_authenticated ) : ?>
 		<!-- Mensaje de no autenticado -->
 		<div class="notice notice-warning">
 			<p>
-				<strong><?php esc_html_e( 'No has iniciado sesión', 'hoko-woocommerce' ); ?></strong><br>
+				<strong><?php esc_html_e( 'No has iniciado sesión', 'hoko-360' ); ?></strong><br>
 				<?php
 				printf(
 					/* translators: %s: enlace a la página de iniciar sesión */
-					esc_html__( 'Debes %s para acceder a esta funcionalidad.', 'hoko-woocommerce' ),
-					'<a href="' . esc_url( admin_url( 'admin.php?page=hoko-360' ) ) . '">' . esc_html__( 'iniciar sesión', 'hoko-woocommerce' ) . '</a>'
+					esc_html__( 'Debes %s para acceder a esta funcionalidad.', 'hoko-360' ),
+					'<a href="' . esc_url( admin_url( 'admin.php?page=hoko-360' ) ) . '">' . esc_html__( 'iniciar sesión', 'hoko-360' ) . '</a>'
 				);
 				?>
 			</p>
@@ -33,24 +33,24 @@ if ( ! defined( 'WPINC' ) ) {
 		<!-- Orden no encontrada -->
 		<div class="notice notice-error">
 			<p>
-				<strong><?php esc_html_e( 'Orden no encontrada', 'hoko-woocommerce' ); ?></strong><br>
-				<?php esc_html_e( 'La orden que intentas confirmar no existe.', 'hoko-woocommerce' ); ?>
+				<strong><?php esc_html_e( 'Orden no encontrada', 'hoko-360' ); ?></strong><br>
+				<?php esc_html_e( 'La orden que intentas confirmar no existe.', 'hoko-360' ); ?>
 			</p>
 		</div>
 		<p>
 			<a href="<?php echo esc_url( admin_url( 'admin.php?page=hoko-360-orders' ) ); ?>" class="button">
-				<?php esc_html_e( 'Volver a Órdenes', 'hoko-woocommerce' ); ?>
+				<?php esc_html_e( 'Volver a Órdenes', 'hoko-360' ); ?>
 			</a>
 		</p>
 	<?php elseif ( $sync_status === 1 && ! empty( $hoko_order_id ) ) : ?>
 		<!-- Orden ya sincronizada -->
 		<div class="notice notice-info">
 			<p>
-				<strong><?php esc_html_e( 'Orden ya sincronizada', 'hoko-woocommerce' ); ?></strong><br>
+				<strong><?php esc_html_e( 'Orden ya sincronizada', 'hoko-360' ); ?></strong><br>
 				<?php 
 				printf(
 					/* translators: %s: ID de la orden en Hoko */
-					esc_html__( 'Esta orden ya fue creada en Hoko con el ID: %s', 'hoko-woocommerce' ),
+					esc_html__( 'Esta orden ya fue creada en Hoko con el ID: %s', 'hoko-360' ),
 					'<strong>' . esc_html( $hoko_order_id ) . '</strong>'
 				);
 				?>
@@ -63,25 +63,25 @@ if ( ! defined( 'WPINC' ) ) {
 		<!-- Detalles de la orden (solo lectura) -->
 		<div class="hoko-confirm-container">
 			<div class="hoko-confirm-card">
-				<h2><?php esc_html_e( 'Detalles de la Orden', 'hoko-woocommerce' ); ?> #<?php echo esc_html( $order->get_order_number() ); ?></h2>
+				<h2><?php esc_html_e( 'Detalles de la Orden', 'hoko-360' ); ?> #<?php echo esc_html( $order->get_order_number() ); ?></h2>
 				
 				<!-- Información de la orden -->
 				<div class="hoko-confirm-section">
 					<table class="form-table">
 						<tr>
-							<th scope="row"><?php esc_html_e( 'Fecha', 'hoko-woocommerce' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'Fecha', 'hoko-360' ); ?></th>
 							<td><?php echo esc_html( $order->get_date_created()->date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ) ); ?></td>
 						</tr>
 						<tr>
-							<th scope="row"><?php esc_html_e( 'Estado', 'hoko-woocommerce' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'Estado', 'hoko-360' ); ?></th>
 							<td><?php echo esc_html( wc_get_order_status_name( $order->get_status() ) ); ?></td>
 						</tr>
 						<tr>
-							<th scope="row"><?php esc_html_e( 'Total', 'hoko-woocommerce' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'Total', 'hoko-360' ); ?></th>
 							<td><strong><?php echo wp_kses_post( $order->get_formatted_order_total() ); ?></strong></td>
 						</tr>
 						<tr>
-							<th scope="row"><?php esc_html_e( 'ID Orden Hoko', 'hoko-woocommerce' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'ID Orden Hoko', 'hoko-360' ); ?></th>
 							<td><strong><?php echo esc_html( $hoko_order_id ); ?></strong></td>
 						</tr>
 					</table>
@@ -89,22 +89,22 @@ if ( ! defined( 'WPINC' ) ) {
 
 				<!-- Información del cliente -->
 				<div class="hoko-confirm-section">
-					<h3><?php esc_html_e( 'Información del Cliente', 'hoko-woocommerce' ); ?></h3>
+					<h3><?php esc_html_e( 'Información del Cliente', 'hoko-360' ); ?></h3>
 					<table class="form-table">
 						<tr>
-							<th scope="row"><?php esc_html_e( 'Nombre', 'hoko-woocommerce' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'Nombre', 'hoko-360' ); ?></th>
 							<td><?php echo esc_html( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ); ?></td>
 						</tr>
 						<tr>
-							<th scope="row"><?php esc_html_e( 'Teléfono', 'hoko-woocommerce' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'Teléfono', 'hoko-360' ); ?></th>
 							<td><?php echo esc_html( $order->get_billing_phone() ); ?></td>
 						</tr>
 						<tr>
-							<th scope="row"><?php esc_html_e( 'Dirección', 'hoko-woocommerce' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'Dirección', 'hoko-360' ); ?></th>
 							<td><?php echo esc_html( $order->get_billing_address_1() . ( $order->get_billing_address_2() ? ' ' . $order->get_billing_address_2() : '' ) ); ?></td>
 						</tr>
 						<tr>
-							<th scope="row"><?php esc_html_e( 'Email', 'hoko-woocommerce' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'Email', 'hoko-360' ); ?></th>
 							<td><?php echo esc_html( $order->get_billing_email() ); ?></td>
 						</tr>
 					</table>
@@ -112,14 +112,14 @@ if ( ! defined( 'WPINC' ) ) {
 
 				<!-- Productos -->
 				<div class="hoko-confirm-section">
-					<h3><?php esc_html_e( 'Productos', 'hoko-woocommerce' ); ?></h3>
+					<h3><?php esc_html_e( 'Productos', 'hoko-360' ); ?></h3>
 					<table class="wp-list-table widefat fixed striped">
 						<thead>
 							<tr>
-								<th><?php esc_html_e( 'Producto', 'hoko-woocommerce' ); ?></th>
-								<th><?php esc_html_e( 'SKU', 'hoko-woocommerce' ); ?></th>
-								<th><?php esc_html_e( 'Cantidad', 'hoko-woocommerce' ); ?></th>
-								<th><?php esc_html_e( 'Precio Unitario', 'hoko-woocommerce' ); ?></th>
+								<th><?php esc_html_e( 'Producto', 'hoko-360' ); ?></th>
+								<th><?php esc_html_e( 'SKU', 'hoko-360' ); ?></th>
+								<th><?php esc_html_e( 'Cantidad', 'hoko-360' ); ?></th>
+								<th><?php esc_html_e( 'Precio Unitario', 'hoko-360' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -147,7 +147,7 @@ if ( ! defined( 'WPINC' ) ) {
 
 				<p>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=hoko-360-orders' ) ); ?>" class="button button-primary">
-						<?php esc_html_e( 'Volver a Órdenes', 'hoko-woocommerce' ); ?>
+						<?php esc_html_e( 'Volver a Órdenes', 'hoko-360' ); ?>
 					</a>
 				</p>
 			</div>
@@ -156,22 +156,22 @@ if ( ! defined( 'WPINC' ) ) {
 		<!-- Formulario de confirmación -->
 		<div class="hoko-confirm-container">
 			<div class="hoko-confirm-card">
-				<h2><?php esc_html_e( 'Detalles de la Orden', 'hoko-woocommerce' ); ?> #<?php echo esc_html( $order->get_order_number() ); ?></h2>
+				<h2><?php esc_html_e( 'Detalles de la Orden', 'hoko-360' ); ?> #<?php echo esc_html( $order->get_order_number() ); ?></h2>
 				
 				<form id="hoko-confirm-form" method="post">
 					<!-- Información de la orden -->
 					<div class="hoko-confirm-section">
 						<table class="form-table">
 							<tr>
-								<th scope="row"><?php esc_html_e( 'Fecha', 'hoko-woocommerce' ); ?></th>
+								<th scope="row"><?php esc_html_e( 'Fecha', 'hoko-360' ); ?></th>
 								<td><?php echo esc_html( $order->get_date_created()->date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ) ); ?></td>
 							</tr>
 							<tr>
-								<th scope="row"><?php esc_html_e( 'Estado', 'hoko-woocommerce' ); ?></th>
+								<th scope="row"><?php esc_html_e( 'Estado', 'hoko-360' ); ?></th>
 								<td><?php echo esc_html( wc_get_order_status_name( $order->get_status() ) ); ?></td>
 							</tr>
 							<tr>
-								<th scope="row"><?php esc_html_e( 'Total', 'hoko-woocommerce' ); ?></th>
+								<th scope="row"><?php esc_html_e( 'Total', 'hoko-360' ); ?></th>
 								<td><strong><?php echo wp_kses_post( $order->get_formatted_order_total() ); ?></strong></td>
 							</tr>
 						</table>
@@ -180,7 +180,7 @@ if ( ! defined( 'WPINC' ) ) {
 					<!-- Información del cliente -->
 					<div class="hoko-confirm-section">
 						<h3>
-                            <?php esc_html_e( 'Información del Cliente', 'hoko-woocommerce' ); ?>
+                            <?php esc_html_e( 'Información del Cliente', 'hoko-360' ); ?>
                             - <?php
                             $billing_city = $order->get_billing_city();
                             $billing_state = $order->get_billing_state();
@@ -201,7 +201,7 @@ if ( ! defined( 'WPINC' ) ) {
                         <input type="hidden" id="billing_state" value="<?php echo esc_attr( $billing_state ); ?>">
 						<table class="form-table">
 							<tr>
-								<th scope="row"><label for="customer_name"><?php esc_html_e( 'Nombre', 'hoko-woocommerce' ); ?> <span class="required">*</span></label></th>
+								<th scope="row"><label for="customer_name"><?php esc_html_e( 'Nombre', 'hoko-360' ); ?> <span class="required">*</span></label></th>
 								<td>
 									<input 
 										type="text" 
@@ -214,7 +214,7 @@ if ( ! defined( 'WPINC' ) ) {
 								</td>
 							</tr>
                             <tr>
-                                <th scope="row"><label for="customer_phone"><?php esc_html_e( 'Teléfono', 'hoko-woocommerce' ); ?> <span class="required">*</span></label></th>
+                                <th scope="row"><label for="customer_phone"><?php esc_html_e( 'Teléfono', 'hoko-360' ); ?> <span class="required">*</span></label></th>
                                 <td>
                                     <input
                                             type="text"
@@ -227,7 +227,7 @@ if ( ! defined( 'WPINC' ) ) {
                                 </td>
                             </tr>
                             <tr>
-                                <th scope="row"><label for="customer_address"><?php esc_html_e( 'Dirección', 'hoko-woocommerce' ); ?> <span class="required">*</span></label></th>
+                                <th scope="row"><label for="customer_address"><?php esc_html_e( 'Dirección', 'hoko-360' ); ?> <span class="required">*</span></label></th>
                                 <td>
                                     <input
                                             type="text"
@@ -240,7 +240,7 @@ if ( ! defined( 'WPINC' ) ) {
                                 </td>
                             </tr>
 							<tr>
-								<th scope="row"><label for="customer_email"><?php esc_html_e( 'Email', 'hoko-woocommerce' ); ?></label></th>
+								<th scope="row"><label for="customer_email"><?php esc_html_e( 'Email', 'hoko-360' ); ?></label></th>
 								<td>
 									<input 
 										type="email" 
@@ -253,7 +253,7 @@ if ( ! defined( 'WPINC' ) ) {
 								</td>
 							</tr>
 							<tr>
-								<th scope="row"><label for="customer_identification"><?php esc_html_e( 'Identificación', 'hoko-woocommerce' ); ?></label></th>
+								<th scope="row"><label for="customer_identification"><?php esc_html_e( 'Identificación', 'hoko-360' ); ?></label></th>
 								<td>
 									<input 
 										type="text" 
@@ -273,10 +273,10 @@ if ( ! defined( 'WPINC' ) ) {
 						<table class="wp-list-table widefat fixed striped">
 							<thead>
 								<tr>
-									<th><?php esc_html_e( 'Producto', 'hoko-woocommerce' ); ?></th>
-									<th><?php esc_html_e( 'SKU', 'hoko-woocommerce' ); ?></th>
-									<th><?php esc_html_e( 'Cantidad', 'hoko-woocommerce' ); ?></th>
-									<th><?php esc_html_e( 'Precio Unitario', 'hoko-woocommerce' ); ?></th>
+									<th><?php esc_html_e( 'Producto', 'hoko-360' ); ?></th>
+									<th><?php esc_html_e( 'SKU', 'hoko-360' ); ?></th>
+									<th><?php esc_html_e( 'Cantidad', 'hoko-360' ); ?></th>
+									<th><?php esc_html_e( 'Precio Unitario', 'hoko-360' ); ?></th>
 								</tr>
 							</thead>
 							<tbody>
@@ -319,7 +319,7 @@ if ( ! defined( 'WPINC' ) ) {
                     <div class="hoko-confirm-section">
                         <table class="form-table">
                             <tr>
-                                <th scope="row"><label for="declared_value"><?php esc_html_e( 'Valor Declarado', 'hoko-woocommerce' ); ?> <span class="required">*</span></label></th>
+                                <th scope="row"><label for="declared_value"><?php esc_html_e( 'Valor Declarado', 'hoko-360' ); ?> <span class="required">*</span></label></th>
                                 <td>
                                     <input 
                                         type="number" 
@@ -331,15 +331,15 @@ if ( ! defined( 'WPINC' ) ) {
                                         step="1"
                                         required
                                     >
-                                    <p class="description"><?php esc_html_e( 'Valor declarado del paquete para el seguro de envío.', 'hoko-woocommerce' ); ?></p>
+                                    <p class="description"><?php esc_html_e( 'Valor declarado del paquete para el seguro de envío.', 'hoko-360' ); ?></p>
                                 </td>
                             </tr>
                             <tr>
-                                <th scope="row"><label for="payment"><?php esc_html_e( 'Método de Pago', 'hoko-woocommerce' ); ?></label></th>
+                                <th scope="row"><label for="payment"><?php esc_html_e( 'Método de Pago', 'hoko-360' ); ?></label></th>
                                 <td>
                                     <select id="payment" name="payment" class="regular-text">
-                                        <option value="0"><?php esc_html_e( 'Pago contra entrega', 'hoko-woocommerce' ); ?></option>
-                                        <option value="1"><?php esc_html_e( 'Pago crédito', 'hoko-woocommerce' ); ?></option>
+                                        <option value="0"><?php esc_html_e( 'Pago contra entrega', 'hoko-360' ); ?></option>
+                                        <option value="1"><?php esc_html_e( 'Pago crédito', 'hoko-360' ); ?></option>
                                     </select>
                                     <p class="description">
                                         Recuerda que si usas el pago crédito, debes tener suficiente saldo disponible en la wallet de tu tienda
@@ -347,7 +347,7 @@ if ( ! defined( 'WPINC' ) ) {
                                 </td>
                             </tr>
                             <tr>
-                                <th scope="row"><label for="contain"><?php esc_html_e( 'Contenido', 'hoko-woocommerce' ); ?></label></th>
+                                <th scope="row"><label for="contain"><?php esc_html_e( 'Contenido', 'hoko-360' ); ?></label></th>
                                 <td>
                                     <?php
                                     $items_names = array();
@@ -367,7 +367,7 @@ if ( ! defined( 'WPINC' ) ) {
                                             value="<?php echo esc_attr( $contain ); ?>"
                                             maxlength="100"
                                     >
-                                    <p class="description"><?php esc_html_e( 'Descripción breve del contenido del paquete (máx. 100 caracteres).', 'hoko-woocommerce' ); ?></p>
+                                    <p class="description"><?php esc_html_e( 'Descripción breve del contenido del paquete (máx. 100 caracteres).', 'hoko-360' ); ?></p>
                                 </td>
                             </tr>
                         </table>
@@ -375,7 +375,7 @@ if ( ! defined( 'WPINC' ) ) {
 
                     <div class="quotation">
                         <button type="button" class="button" id="hoko-quote-shipping">
-                            <?php esc_html_e( 'Cotizar envío', 'hoko-woocommerce' ); ?>
+                            <?php esc_html_e( 'Cotizar envío', 'hoko-360' ); ?>
                         </button>
                         <div id="hoko-quotation-results" style="display: none;">
                             <!-- Aquí se mostrarán las opciones de transporte -->
@@ -390,7 +390,7 @@ if ( ! defined( 'WPINC' ) ) {
 					<!-- Botones de acción -->
 					<p class="submit">
 						<button type="submit" class="button button-primary button-large" id="hoko-confirm-submit" disabled>
-							<?php esc_html_e( 'Confirmar y Crear Orden en Hoko', 'hoko-woocommerce' ); ?>
+							<?php esc_html_e( 'Confirmar y Crear Orden en Hoko', 'hoko-360' ); ?>
 						</button>
 						<span class="spinner"></span>
 					</p>

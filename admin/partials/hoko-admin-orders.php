@@ -19,12 +19,12 @@ if ( ! defined( 'WPINC' ) ) {
 		<!-- Mensaje de no autenticado -->
 		<div class="notice notice-warning">
 			<p>
-				<strong><?php esc_html_e( 'No has iniciado sesión', 'hoko-woocommerce' ); ?></strong><br>
+				<strong><?php esc_html_e( 'No has iniciado sesión', 'hoko-360' ); ?></strong><br>
 				<?php
 				printf(
 					/* translators: %s: enlace a la página de iniciar sesión */
-					esc_html__( 'Debes %s para acceder a esta funcionalidad.', 'hoko-woocommerce' ),
-					'<a href="' . esc_url( admin_url( 'admin.php?page=hoko-360' ) ) . '">' . esc_html__( 'iniciar sesión', 'hoko-woocommerce' ) . '</a>'
+					esc_html__( 'Debes %s para acceder a esta funcionalidad.', 'hoko-360' ),
+					'<a href="' . esc_url( admin_url( 'admin.php?page=hoko-360' ) ) . '">' . esc_html__( 'iniciar sesión', 'hoko-360' ) . '</a>'
 				);
 				?>
 			</p>
@@ -33,23 +33,23 @@ if ( ! defined( 'WPINC' ) ) {
 		<!-- Contenido de órdenes de compra -->
 		<div class="hoko-orders-container">
 			<div class="hoko-orders-card">
-				<h2><?php esc_html_e( 'Gestión de Órdenes de Compra', 'hoko-woocommerce' ); ?></h2>
-				<p><?php esc_html_e( 'Sincroniza las órdenes de WooCommerce con Hoko.', 'hoko-woocommerce' ); ?></p>
+				<h2><?php esc_html_e( 'Gestión de Órdenes de Compra', 'hoko-360' ); ?></h2>
+				<p><?php esc_html_e( 'Sincroniza las órdenes de WooCommerce con Hoko.', 'hoko-360' ); ?></p>
 				
 				<?php if ( empty( $orders ) ) : ?>
 					<div class="notice notice-info inline">
-						<p><?php esc_html_e( 'No hay órdenes disponibles para sincronizar.', 'hoko-woocommerce' ); ?></p>
+						<p><?php esc_html_e( 'No hay órdenes disponibles para sincronizar.', 'hoko-360' ); ?></p>
 					</div>
 				<?php else : ?>
 					<table class="wp-list-table widefat fixed striped">
 						<thead>
 							<tr>
-								<th><?php esc_html_e( 'Orden', 'hoko-woocommerce' ); ?></th>
-								<th><?php esc_html_e( 'Cliente', 'hoko-woocommerce' ); ?></th>
-								<th><?php esc_html_e( 'Total', 'hoko-woocommerce' ); ?></th>
-								<th><?php esc_html_e( 'Estado', 'hoko-woocommerce' ); ?></th>
-								<th><?php esc_html_e( 'Fecha', 'hoko-woocommerce' ); ?></th>
-								<th><?php esc_html_e( 'Acciones', 'hoko-woocommerce' ); ?></th>
+								<th><?php esc_html_e( 'Orden', 'hoko-360' ); ?></th>
+								<th><?php esc_html_e( 'Cliente', 'hoko-360' ); ?></th>
+								<th><?php esc_html_e( 'Total', 'hoko-360' ); ?></th>
+								<th><?php esc_html_e( 'Estado', 'hoko-360' ); ?></th>
+								<th><?php esc_html_e( 'Fecha', 'hoko-360' ); ?></th>
+								<th><?php esc_html_e( 'Acciones', 'hoko-360' ); ?></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -62,13 +62,13 @@ if ( ! defined( 'WPINC' ) ) {
 								
 								// Determinar clase de estado
 								$status_class = 'pending';
-								$status_text = __( 'Pendiente', 'hoko-woocommerce' );
+								$status_text = __( 'Pendiente', 'hoko-360' );
 								if ( $sync_status === 1 ) {
 									$status_class = 'synced';
-									$status_text = __( 'Sincronizado', 'hoko-woocommerce' );
+									$status_text = __( 'Sincronizado', 'hoko-360' );
 								} elseif ( $sync_status === 2 ) {
 									$status_class = 'failed';
-									$status_text = __( 'Fallido', 'hoko-woocommerce' );
+									$status_text = __( 'Fallido', 'hoko-360' );
 								}
 								?>
 								<tr data-order-id="<?php echo esc_attr( $order->get_id() ); ?>">
@@ -76,7 +76,7 @@ if ( ! defined( 'WPINC' ) ) {
 										<strong>#<?php echo esc_html( $order->get_order_number() ); ?></strong>
 										<?php if ( $hoko_order_id ) : ?>
 											<?php /* translators: %s: Hoko order ID */ ?>
-											<br><small><?php echo esc_html( sprintf( __( 'Hoko ID: %s', 'hoko-woocommerce' ), $hoko_order_id ) ); ?></small>
+											<br><small><?php echo esc_html( sprintf( __( 'Hoko ID: %s', 'hoko-360' ), $hoko_order_id ) ); ?></small>
 										<?php endif; ?>
 									</td>
 									<td>
@@ -99,11 +99,11 @@ if ( ! defined( 'WPINC' ) ) {
 												href="<?php echo esc_url( admin_url( 'admin.php?page=hoko-360-order-confirm&order_id=' . $order->get_id() ) ); ?>" 
 												class="button button-primary"
 											>
-												<?php esc_html_e( 'Crear Orden', 'hoko-woocommerce' ); ?>
+												<?php esc_html_e( 'Crear Orden', 'hoko-360' ); ?>
 											</a>
 										<?php else : ?>
 											<span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span>
-											<?php esc_html_e( 'Sincronizado', 'hoko-woocommerce' ); ?>
+											<?php esc_html_e( 'Sincronizado', 'hoko-360' ); ?>
 										<?php endif; ?>
 									</td>
 								</tr>
