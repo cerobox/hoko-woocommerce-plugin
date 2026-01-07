@@ -784,6 +784,7 @@ class Hoko_Admin {
 			'contain'     => isset( $_POST['contain'] ) ? sanitize_text_field( $_POST['contain'] ) : '',
 			'measures'    => $measures_json,
 			'external_id' => isset( $_POST['order_id'] ) ? sanitize_text_field( $_POST['order_id'] ) : '',
+			'origin' => 3 // Requerido para permitir creación para ordenes desde woocommerce
 		);
 	}
 
