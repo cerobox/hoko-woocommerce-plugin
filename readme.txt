@@ -1,6 +1,6 @@
 === Hoko 360 ===
-Contributors: cerobox
-Tags: woocommerce, admin, integration, hoko
+Contributors: Hoko Dev Team
+Tags: woocommerce, admin, integration, hoko, dropshipping, ecommerce, colombia, ecuador, estados unidos, usa
 Requires at least: 5.8
 Tested up to: 6.4
 Stable tag: 1.0.0
