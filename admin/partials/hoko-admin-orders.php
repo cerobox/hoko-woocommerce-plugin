@@ -53,22 +53,22 @@ if ( ! defined( 'WPINC' ) ) {
 							</tr>
 						</thead>
 						<tbody>
-							<?php foreach ( $orders as $order_data ) : ?>
+							<?php foreach ( $orders as $hoko_order_data ) : ?>
 								<?php
-								$order = $order_data['order'];
-								$sync_status = $order_data['sync_status'];
-								$sync_message = $order_data['sync_message'];
-								$hoko_order_id = $order_data['hoko_order_id'];
+								$order = $hoko_order_data['order'];
+								$hoko_sync_status = $hoko_order_data['sync_status'];
+								$hoko_sync_message = $hoko_order_data['sync_message'];
+								$hoko_order_id = $hoko_order_data['hoko_order_id'];
 								
 								// Determinar clase de estado
-								$status_class = 'pending';
-								$status_text = __( 'Pendiente', 'hoko-360' );
-								if ( $sync_status === 1 ) {
-									$status_class = 'synced';
-									$status_text = __( 'Sincronizado', 'hoko-360' );
-								} elseif ( $sync_status === 2 ) {
-									$status_class = 'failed';
-									$status_text = __( 'Fallido', 'hoko-360' );
+								$hoko_status_class = 'pending';
+								$hoko_status_text = __( 'Pendiente', 'hoko-360' );
+								if ( $hoko_sync_status === 1 ) {
+									$hoko_status_class = 'synced';
+									$hoko_status_text = __( 'Sincronizado', 'hoko-360' );
+								} elseif ( $hoko_sync_status === 2 ) {
+									$hoko_status_class = 'failed';
+									$hoko_status_text = __( 'Fallido', 'hoko-360' );
 								}
 								?>
 								<tr data-order-id="<?php echo esc_attr( $order->get_id() ); ?>">
@@ -85,16 +85,16 @@ if ( ! defined( 'WPINC' ) ) {
 									</td>
 									<td><?php echo wp_kses_post( $order->get_formatted_order_total() ); ?></td>
 									<td>
-										<span class="hoko-sync-status hoko-sync-<?php echo esc_attr( $status_class ); ?>">
-											<?php echo esc_html( $status_text ); ?>
+										<span class="hoko-sync-status hoko-sync-<?php echo esc_attr( $hoko_status_class ); ?>">
+											<?php echo esc_html( $hoko_status_text ); ?>
 										</span>
-										<?php if ( $sync_message ) : ?>
-											<br><small class="hoko-sync-message"><?php echo esc_html( $sync_message ); ?></small>
+										<?php if ( $hoko_sync_message ) : ?>
+											<br><small class="hoko-sync-message"><?php echo esc_html( $hoko_sync_message ); ?></small>
 										<?php endif; ?>
 									</td>
 									<td><?php echo esc_html( $order->get_date_created()->date_i18n( get_option( 'date_format' ) ) ); ?></td>
 									<td>
-										<?php if ( $sync_status !== 1 ) : ?>
+										<?php if ( $hoko_sync_status !== 1 ) : ?>
 											<a 
 												href="<?php echo esc_url( admin_url( 'admin.php?page=hoko-360-order-confirm&order_id=' . $order->get_id() ) ); ?>" 
 												class="button button-primary"

@@ -124,21 +124,21 @@ if ( ! defined( 'WPINC' ) ) {
 						</thead>
 						<tbody>
 							<?php 
-							foreach ( $order->get_items() as $item ) : 
-								$product = $item->get_product();
-								if ( ! $product ) {
+							foreach ( $order->get_items() as $hoko_item ) : 
+								$hoko_product = $hoko_item->get_product();
+								if ( ! $hoko_product ) {
 									continue;
 								}
-								$product_id = $product->get_id();
-								$sku = $product->get_sku() ?: $product_id;
-								$quantity = $item->get_quantity();
-								$unit_price = floatval( $item->get_total() / $quantity );
+								$hoko_product_id = $hoko_product->get_id();
+								$hoko_sku = $hoko_product->get_sku() ?: $hoko_product_id;
+								$hoko_quantity = $hoko_item->get_quantity();
+								$hoko_unit_price = floatval( $hoko_item->get_total() / $hoko_quantity );
 							?>
 								<tr>
-									<td><?php echo esc_html( $item->get_name() ); ?></td>
-									<td><?php echo esc_html( $sku ); ?></td>
-									<td><?php echo esc_html( $quantity ); ?></td>
-									<td><?php echo esc_html( number_format( $unit_price, 2, '.', '' ) ); ?></td>
+									<td><?php echo esc_html( $hoko_item->get_name() ); ?></td>
+									<td><?php echo esc_html( $hoko_sku ); ?></td>
+									<td><?php echo esc_html( $hoko_quantity ); ?></td>
+									<td><?php echo esc_html( number_format( $hoko_unit_price, 2, '.', '' ) ); ?></td>
 								</tr>
 							<?php endforeach; ?>
 						</tbody>
@@ -182,23 +182,23 @@ if ( ! defined( 'WPINC' ) ) {
 						<h3>
                             <?php esc_html_e( 'Información del Cliente', 'hoko-360' ); ?>
                             - <?php
-                            $billing_city = $order->get_billing_city();
-                            $billing_state = $order->get_billing_state();
+                            $hoko_billing_city = $order->get_billing_city();
+                            $hoko_billing_state = $order->get_billing_state();
 
-                            if ( $billing_city && $billing_state ) {
-                                echo esc_html( $billing_city ) . ', ' . esc_html( $billing_state );
-                            } elseif ( $billing_city ) {
-                                echo esc_html( $billing_city );
-                            } elseif ( $billing_state ) {
-                                echo esc_html( $billing_state );
+                            if ( $hoko_billing_city && $hoko_billing_state ) {
+                                echo esc_html( $hoko_billing_city ) . ', ' . esc_html( $hoko_billing_state );
+                            } elseif ( $hoko_billing_city ) {
+                                echo esc_html( $hoko_billing_city );
+                            } elseif ( $hoko_billing_state ) {
+                                echo esc_html( $hoko_billing_state );
                             } else {
                                 echo 'No especificados';
                             }
                             ?>
                         </h3>
                         <input type="hidden" name="order_id" value="<?php echo esc_attr( $order->get_id() ); ?>">
-                        <input type="hidden" id="billing_city" value="<?php echo esc_attr( $billing_city ); ?>">
-                        <input type="hidden" id="billing_state" value="<?php echo esc_attr( $billing_state ); ?>">
+                        <input type="hidden" id="billing_city" value="<?php echo esc_attr( $hoko_billing_city ); ?>">
+                        <input type="hidden" id="billing_state" value="<?php echo esc_attr( $hoko_billing_state ); ?>">
 						<table class="form-table">
 							<tr>
 								<th scope="row"><label for="customer_name"><?php esc_html_e( 'Nombre', 'hoko-360' ); ?> <span class="required">*</span></label></th>
@@ -281,34 +281,34 @@ if ( ! defined( 'WPINC' ) ) {
 							</thead>
 							<tbody>
 								<?php 
-								$item_index = 0;
-								foreach ( $order->get_items() as $item ) : 
-									$product = $item->get_product();
-									if ( ! $product ) {
+								$hoko_item_index = 0;
+								foreach ( $order->get_items() as $hoko_item ) : 
+									$hoko_product = $hoko_item->get_product();
+									if ( ! $hoko_product ) {
 										continue;
 									}
-									$product_id = $product->get_id();
-									$sku = $product->get_sku() ?: $product_id;
-									$quantity = $item->get_quantity();
-									$unit_price = floatval( $item->get_total() / $quantity );
+									$hoko_product_id = $hoko_product->get_id();
+									$hoko_sku = $hoko_product->get_sku() ?: $hoko_product_id;
+									$hoko_quantity = $hoko_item->get_quantity();
+									$hoko_unit_price = floatval( $hoko_item->get_total() / $hoko_quantity );
 								?>
 									<tr>
 										<td>
-											<?php echo esc_html( $item->get_name() ); ?>
-											<input type="hidden" name="stocks[<?php echo esc_attr( $item_index ); ?>][sku]" value="<?php echo esc_attr( $sku ); ?>">
+											<?php echo esc_html( $hoko_item->get_name() ); ?>
+											<input type="hidden" name="stocks[<?php echo esc_attr( $hoko_item_index ); ?>][sku]" value="<?php echo esc_attr( $hoko_sku ); ?>">
 										</td>
-										<td><?php echo esc_html( $sku ); ?></td>
+										<td><?php echo esc_html( $hoko_sku ); ?></td>
 										<td>
-											<?php echo esc_html( $quantity ); ?>
-											<input type="hidden" name="stocks[<?php echo esc_attr( $item_index ); ?>][amount]" value="<?php echo esc_attr( $quantity ); ?>">
+											<?php echo esc_html( $hoko_quantity ); ?>
+											<input type="hidden" name="stocks[<?php echo esc_attr( $hoko_item_index ); ?>][amount]" value="<?php echo esc_attr( $hoko_quantity ); ?>">
 										</td>
 										<td>
-											<?php echo esc_html( number_format( $unit_price, 2, '.', '' ) ); ?>
-											<input type="hidden" name="stocks[<?php echo esc_attr( $item_index ); ?>][price]" value="<?php echo esc_attr( number_format( $unit_price, 2, '.', '' ) ); ?>">
+											<?php echo esc_html( number_format( $hoko_unit_price, 2, '.', '' ) ); ?>
+											<input type="hidden" name="stocks[<?php echo esc_attr( $hoko_item_index ); ?>][price]" value="<?php echo esc_attr( number_format( $hoko_unit_price, 2, '.', '' ) ); ?>">
 										</td>
 									</tr>
 								<?php 
-									$item_index++;
+									$hoko_item_index++;
 								endforeach; 
 								?>
 							</tbody>
@@ -350,13 +350,13 @@ if ( ! defined( 'WPINC' ) ) {
                                 <th scope="row"><label for="contain"><?php esc_html_e( 'Contenido', 'hoko-360' ); ?></label></th>
                                 <td>
                                     <?php
-                                    $items_names = array();
-                                    foreach ( $order->get_items() as $item ) {
-                                        $items_names[] = $item->get_name();
+                                    $hoko_items_names = array();
+                                    foreach ( $order->get_items() as $hoko_item ) {
+                                        $hoko_items_names[] = $hoko_item->get_name();
                                     }
-                                    $contain = implode( ', ', $items_names );
-                                    if ( strlen( $contain ) > 100 ) {
-                                        $contain = substr( $contain, 0, 97 ) . '...';
+                                    $hoko_contain = implode( ', ', $hoko_items_names );
+                                    if ( strlen( $hoko_contain ) > 100 ) {
+                                        $hoko_contain = substr( $hoko_contain, 0, 97 ) . '...';
                                     }
                                     ?>
                                     <input
@@ -364,7 +364,7 @@ if ( ! defined( 'WPINC' ) ) {
                                             id="contain"
                                             name="contain"
                                             class="large-text"
-                                            value="<?php echo esc_attr( $contain ); ?>"
+                                            value="<?php echo esc_attr( $hoko_contain ); ?>"
                                             maxlength="100"
                                     >
                                     <p class="description"><?php esc_html_e( 'Descripción breve del contenido del paquete (máx. 100 caracteres).', 'hoko-360' ); ?></p>

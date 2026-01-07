@@ -25,37 +25,37 @@ if ( ! defined( 'WPINC' ) ) {
 					<p>
 						<strong><?php esc_html_e( '✓ Sesión activa', 'hoko-360' ); ?></strong><br>
 						<?php
-						$auth_email   = get_option( 'hoko_360_auth_email', '' );
-						$auth_country = get_option( 'hoko_360_auth_country', '' );
-						$auth_time    = get_option( 'hoko_360_auth_time', '' );
-						$token_refreshed = get_option( 'hoko_360_token_refreshed', '' );
+						$hoko_auth_email   = get_option( 'hoko_360_auth_email', '' );
+						$hoko_auth_country = get_option( 'hoko_360_auth_country', '' );
+						$hoko_auth_time    = get_option( 'hoko_360_auth_time', '' );
+						$hoko_token_refreshed = get_option( 'hoko_360_token_refreshed', '' );
 						
 						// Mapeo de países
-						$countries = array(
+						$hoko_countries = array(
 							'colombia' => __( 'Colombia', 'hoko-360' ),
 							'ecuador'  => __( 'Ecuador', 'hoko-360' ),
 							'usa'      => __( 'Estados Unidos', 'hoko-360' ),
 						);
 						
-						if ( $auth_country && isset( $countries[ $auth_country ] ) ) {
+						if ( $hoko_auth_country && isset( $hoko_countries[ $hoko_auth_country ] ) ) {
 							/* translators: %s: país conectado */
-							printf( esc_html__( 'País: %s', 'hoko-360' ), esc_html( $countries[ $auth_country ] ) );
+							printf( esc_html__( 'País: %s', 'hoko-360' ), esc_html( $hoko_countries[ $hoko_auth_country ] ) );
 							echo '<br>';
 						}
-						if ( $auth_email ) {
+						if ( $hoko_auth_email ) {
 							/* translators: %s: email del usuario autenticado */
-							printf( esc_html__( 'Usuario: %s', 'hoko-360' ), esc_html( $auth_email ) );
+							printf( esc_html__( 'Usuario: %s', 'hoko-360' ), esc_html( $hoko_auth_email ) );
 							echo '<br>';
 						}
-						if ( $auth_time ) {
+						if ( $hoko_auth_time ) {
 							/* translators: %s: fecha de autenticación */
-							printf( esc_html__( 'Autenticado el: %s', 'hoko-360' ), esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $auth_time ) ) );
+							printf( esc_html__( 'Autenticado el: %s', 'hoko-360' ), esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $hoko_auth_time ) ) );
 							echo '<br>';
 						}
-						if ( $token_refreshed ) {
+						if ( $hoko_token_refreshed ) {
 							echo '<span id="token-refresh-time">';
 							/* translators: %s: fecha del último refresh del token */
-							printf( esc_html__( 'Token refrescado: %s', 'hoko-360' ), esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $token_refreshed ) ) );
+							printf( esc_html__( 'Token refrescado: %s', 'hoko-360' ), esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $hoko_token_refreshed ) ) );
 							echo '</span>';
 						}
 						?>
